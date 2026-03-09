@@ -1,0 +1,22 @@
+app:
+  name:"im"
+  mode:"dev"
+  port:8081
+mysql:
+  host:"192.168.78.140"
+  port:3306
+  user:"root"
+  password:"sta_go"
+  dbname:"im"
+log:
+  level:"debug"
+  filename:"bug.log"
+  max_size:300
+  max_age:30
+  max_backups:7
+redis:
+  host:"192.168.78.140"
+  port:6379
+  db:0
+  pool_size:1000
+  password:"sta_go"
