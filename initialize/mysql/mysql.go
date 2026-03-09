@@ -9,7 +9,7 @@ import (
 
 var db *sqlx.DB
 
-func Init() (err error) {
+func InitMysql() (err error) {
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&parseTime=True",
 		viper.GetString("mysql.user"),
 		viper.GetString("mysql.password"),

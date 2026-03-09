@@ -9,7 +9,7 @@ import (
 
 var rdb *redis.Client
 
-func Init() (err error) {
+func InitRedis() (err error) {
 	rdb = redis.NewClient(&redis.Options{
 		Addr: fmt.Sprintf("%s:%d",
 			viper.GetString("redis.host"),
