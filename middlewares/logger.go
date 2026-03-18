@@ -1,4 +1,4 @@
-package logger
+package middlewares
 
 import (
 	"github.com/gin-gonic/gin"
@@ -19,21 +19,21 @@ var lg *zap.Logger
 
 // InitLogger 初始化Logger
 func InitLogger() (err error) {
-	writeSyncer := getLogWriter(viper.GetString("log.filename"),
+	writeSyncer := getLogWriter(
+		viper.GetString("log.filename"),
 		viper.GetInt("log.max_size"),
 		viper.GetInt("log.max_backups"),
 		viper.GetInt("log.max_age"),
 	)
 	encoder := getEncoder()
-	var l = new(zapcore.Level)
-	err = l.UnmarshalText([]byte(viper.GetString("log.level")))
+	var level = new(zapcore.Level)
+	err = level.UnmarshalText([]byte(viper.GetString("log.level")))
 	if err != nil {
 		return
 	}
-	core := zapcore.NewCore(encoder, writeSyncer, l)
-
-	lg = zap.New(core, zap.AddCaller())
-	zap.ReplaceGlobals(lg) // 替换zap包中全局的logger实例，后续在其他包中只需使用zap.L()调用即可
+	core := zapcore.NewCore(encoder, writeSyncer, level)
+	lg = zap.New(core, zap.AddCaller(), zap.AddCallerSkip(1))
+	zap.ReplaceGlobals(lg)
 	return
 }
 

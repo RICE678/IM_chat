@@ -1,8 +1,11 @@
 package main
 
 import (
-	"IM_chat/initialize/logger"
+	_ "IM_chat/docs"
 	"IM_chat/initialize/mysql"
+	"IM_chat/initialize/redis"
+	"IM_chat/middlewares"
+	"IM_chat/pkg/snowflake"
 	"IM_chat/routes"
 	"IM_chat/settings"
 	"context"
@@ -17,12 +20,20 @@ import (
 	"time"
 )
 
+// @title IM Chat API
+// @version 1.0
+// @description IM Chat backend API documentation.
+// @BasePath /
+// @schemes http
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
 func main() {
 	if err := settings.InitSettings(); err != nil {
 		fmt.Printf("init settings failed,err:%v\n", err)
 		return
 	}
-	if err := logger.GinLogger(); err != nil {
+	if err := middlewares.InitLogger(); err != nil {
 		fmt.Printf("init logger failed,err:%v\n", err)
 		return
 	}
@@ -31,8 +42,16 @@ func main() {
 		fmt.Printf("init mysql failed,err:%v\n", err)
 		return
 	}
+	if err := redis.InitRedis(); err != nil {
+		fmt.Printf("init redis failed,err:%v\n", err)
+		return
+	}
+	if err := snowflake.Init(viper.GetString("app.start_time"), viper.GetInt64("app.machine_id")); err != nil {
+		fmt.Printf("init snowflake failed,err:%v\n", err)
+		return
+	}
+
 	r := routes.Setup()
-	// 启动服务（优雅关机）
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%d", viper.GetInt("app.port")),
 		Handler: r,

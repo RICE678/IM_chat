@@ -2,6 +2,7 @@ package mysql
 
 import (
 	"fmt"
+	_ "github.com/go-sql-driver/mysql" // 注册 mysql 驱动
 	"github.com/jmoiron/sqlx"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
@@ -23,4 +24,8 @@ func InitMysql() (err error) {
 		return
 	}
 	return
+}
+
+func DB() *sqlx.DB {
+	return db
 }

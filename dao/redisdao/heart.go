@@ -1,0 +1,45 @@
+package redisdao
+
+import (
+	"IM_chat/initialize/redis"
+	"IM_chat/pkg/errcode"
+	"context"
+	"errors"
+	"strconv"
+	"time"
+)
+
+func RefreshOnline(userID int64) error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+	onlineKey := "online:" + strconv.FormatInt(userID, 10)
+	exists, err := redis.RDB.Exists(ctx, onlineKey).Result()
+	if err != nil {
+		return err
+	}
+	if exists == 0 {
+		return errors.New(errcode.Msg(errcode.UserNotLogin))
+	}
+	return redis.RDB.Expire(ctx, onlineKey, 30*time.Second).Err()
+}
+
+func IsUserOnline(userID int64) (bool, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+	onlineKey := "online:" + strconv.FormatInt(userID, 10)
+	exists, err := redis.RDB.Exists(ctx, onlineKey).Result()
+	if err != nil {
+		return false, err
+	}
+	return exists == 1, nil
+}
+
+func LogoutRedis(userID int64) error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+	id := strconv.FormatInt(userID, 10)
+	onlineKey := "online:" + id
+	loginKey := "login:" + id
+	_, err := redis.RDB.Del(ctx, loginKey, onlineKey).Result()
+	return err
+}
