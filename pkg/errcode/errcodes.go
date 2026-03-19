@@ -17,6 +17,7 @@ const (
 	UserNotLogin     = 2007
 	CodeNeedLogin    = 2008
 	CodeInvalidToken = 2009
+	NoPerson         = 3001
 )
 
 var codeMsg = map[int]string{
@@ -36,6 +37,7 @@ var codeMsg = map[int]string{
 	UserNotLogin:     "用户不在线",
 	CodeNeedLogin:    "需要登录",
 	CodeInvalidToken: "无效的token",
+	NoPerson:         "查无此人",
 }
 
 func Msg(code int) string {

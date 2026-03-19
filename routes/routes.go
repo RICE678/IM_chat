@@ -13,6 +13,8 @@ import (
 // Setup 初始化路由，挂载所有接口
 func Setup() *gin.Engine {
 	r := gin.New()
+	emailController := email.NewEmailController()
+	userController := user.NewUserController()
 	r.Use(middlewares.Cors(), middlewares.GinLogger(), middlewares.GinRecovery(true))
 	r.GET("/", func(c *gin.Context) {
 		c.String(http.StatusOK, "ok")
@@ -20,19 +22,27 @@ func Setup() *gin.Engine {
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	emailGroup := r.Group("/email")
 	{
-		emailGroup.POST("/send", email.ConfirmUserEmail)
+		emailGroup.POST("/send", emailController.ConfirmUserEmail)
 	}
 	userGroup := r.Group("/user")
 	{
-		userGroup.POST("/register", user.Register)
-		userGroup.POST("/login", user.Login)
-		userGroup.POST("/heartbeat", user.Heartbeat)
+		userGroup.POST("/register", userController.Register)
+		userGroup.POST("/login", userController.Login)
 		userGroup.Use(middlewares.JWTAuthMiddleware())
 		{
-			userGroup.PUT("/update/pwd", user.ReUpdate)
-			userGroup.PUT("/update/email", user.ReEmail)
+			userGroup.POST("/heartbeat", userController.Heartbeat)
+			userGroup.PUT("/update/pwd", userController.ReUpdate)
+			userGroup.PUT("/update/email", userController.ReEmail)
+			userGroup.POST("/create", userController.CreateUserMain)
+			userGroup.DELETE("/deleteUser", userController.DelUser)
 		}
 	}
+	applicationGroup := r.Group("/application")
+	{
+		applicationGroup.Use(middlewares.JWTAuthMiddleware())
+		{
 
+		}
+	}
 	return r
 }

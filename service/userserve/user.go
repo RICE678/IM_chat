@@ -9,6 +9,7 @@ import (
 	"IM_chat/pkg/errcode"
 	"IM_chat/pkg/jwt"
 	"context"
+	"fmt"
 	"time"
 )
 
@@ -33,38 +34,38 @@ func RegisterDetail(user *models.RegisterServer) string {
 	return errcode.Msg(errcode.SUCCESS)
 }
 
-func LoginDetail(user *models.LoginServer) string {
+func LoginDetail(user *models.LoginServer) (string, string, int64) {
 	user.Password = dao.Md5(user.Password)
 	exists, err := redis.RDB.Exists(context.Background(), "login:"+user.Email).Result()
 	if err != nil {
-		return errcode.Msg(errcode.ERROR)
+		return errcode.Msg(errcode.ERROR), "", 0
 	}
 	if exists == 0 {
 		if !sql.IsRegisterEmail(user.Email) {
-			return errcode.Msg(errcode.NullEmail)
+			return errcode.Msg(errcode.NullEmail), "", 0
 		}
 		if err = sql.Login(user.Email, user.Password); err != nil {
-			return errcode.Msg(errcode.PasswordError)
+			return errcode.Msg(errcode.PasswordError), "", 0
 		}
 	} else {
 		password := redis.RDB.Get(context.Background(), "login:"+user.Email).Val()
 		if password != user.Password {
-			return errcode.Msg(errcode.PasswordError)
+			return errcode.Msg(errcode.PasswordError), "", 0
 		}
 	}
 	user.UserID, err = sql.SearchID(user.Email)
 	if err != nil {
-		return errcode.Msg(errcode.ERROR)
+		return errcode.Msg(errcode.ERROR), "", 0
 	}
 	if err = redis2.LoginRedis(user); err != nil {
-		return errcode.Msg(errcode.ERROR)
+		return errcode.Msg(errcode.ERROR), "", 0
 	}
 	token, err := jwt.SetToken(user.UserID)
 	if err != nil {
-		return errcode.Msg(errcode.ERROR)
+		return errcode.Msg(errcode.ERROR), "", 0
 	}
 	user.Token = token
-	return errcode.Msg(errcode.SUCCESS)
+	return errcode.Msg(errcode.SUCCESS), token, user.UserID
 }
 
 func UpdateDetail(user *models.ReUpdate) string {
@@ -89,19 +90,35 @@ func UpdateDetail(user *models.ReUpdate) string {
 
 func ReEmail(user *models.ReEmail) string {
 	var err error
-	var password string
-	if password, err = sql.SearchEmail(user.UserID); err != nil {
+	if user.Email, err = sql.SearchEmail(user.UserID); err != nil {
 		return errcode.Msg(errcode.ERROR)
 	}
-	user.Password = dao.Md5(password)
-	if err := redis2.ReEmailRedis(user); err != nil {
+	if user.Password, err = sql.SearchPassword(user.UserID); err != nil {
 		return errcode.Msg(errcode.ERROR)
 	}
-	if err = sql.ReSetEmail(user.UserID, user.Email); err != nil {
+	user.Password = dao.Md5(user.Password)
+	if err = sql.ReSetEmail(user.UserID, user.NewEmail); err != nil {
 		return errcode.Msg(errcode.ERROR)
 	}
 	if err = redis2.ReEmailRedis(user); err != nil {
 		return errcode.Msg(errcode.ERROR)
 	}
 	return errcode.Msg(errcode.SUCCESS)
+}
+
+func CreateAccountDetails(user *models.UserMain) string {
+	if err := sql.UpdateUserMain(user.UserID, user.Name, user.Gender, user.Signature); err != nil {
+		return fmt.Sprintf("服务器出错: %v", err)
+	}
+	return errcode.Msg(errcode.SUCCESS)
+}
+
+func DelUserDetail(userID int64) string {
+	if err := redis2.LogoutRedis(userID); err != nil {
+		return errcode.Msg(errcode.ERROR)
+	}
+	if err := sql.DeleteUser(userID); err != nil {
+		return errcode.Msg(errcode.ERROR)
+	}
+	return errcode.Msg(errcode.ERROR)
 }

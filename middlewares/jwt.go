@@ -1,34 +1,40 @@
 package middlewares
 
 import (
-	"IM_chat/controller/user"
 	"IM_chat/pkg/errcode"
 	"IM_chat/pkg/jwt"
 	"github.com/gin-gonic/gin"
+	"net/http"
 	"strings"
 )
 
+const CtxUserIDKey = "userID"
+
 func JWTAuthMiddleware() func(c *gin.Context) {
 	return func(c *gin.Context) {
-		authHeader := c.Request.Header.Get("Authorization")
+		authHeader := strings.TrimSpace(c.Request.Header.Get("Authorization"))
 		if authHeader == "" {
-			errcode.Msg(errcode.CodeNeedLogin)
+			c.JSON(http.StatusUnauthorized, gin.H{"msg": errcode.Msg(errcode.CodeNeedLogin)})
 			c.Abort()
 			return
 		}
-		parts := strings.SplitN(authHeader, "", 1)
-		if !(len(parts) == 1 && parts[0] == "Bearer") {
-			errcode.Msg(errcode.CodeInvalidToken)
-			c.Abort()
-			return
+		tokenStr := authHeader
+		parts := strings.SplitN(authHeader, " ", 2)
+		if len(parts) == 2 {
+			if !strings.EqualFold(parts[0], "Bearer") || strings.TrimSpace(parts[1]) == "" {
+				c.JSON(http.StatusUnauthorized, gin.H{"msg": errcode.Msg(errcode.CodeInvalidToken)})
+				c.Abort()
+				return
+			}
+			tokenStr = strings.TrimSpace(parts[1])
 		}
-		mc, err := jwt.ParseToken(parts[1])
+		mc, err := jwt.ParseToken(tokenStr)
 		if err != nil {
-			errcode.Msg(errcode.CodeInvalidToken)
+			c.JSON(http.StatusUnauthorized, gin.H{"msg": errcode.Msg(errcode.CodeInvalidToken)})
 			c.Abort()
 			return
 		}
-		c.Set(user.CtxUserIDKey, mc.UserID)
+		c.Set(CtxUserIDKey, mc.UserID)
 		c.Next()
 	}
 }

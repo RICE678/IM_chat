@@ -5,6 +5,12 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+type EmailController struct{}
+
+func NewEmailController() EmailController {
+	return EmailController{}
+}
+
 // ConfirmUserEmail godoc
 // @Summary 发送邮箱验证码
 // @Tags email
@@ -13,12 +19,12 @@ import (
 // @Param request body email.UserSendConfirmEmailService true "邮箱验证码请求"
 // @Success 200 {string} string
 // @Router /email/send [post]
-func ConfirmUserEmail(c *gin.Context) {
-	var service email.UserSendConfirmEmailService
-	if err := c.ShouldBind(&service); err != nil {
+func (ec EmailController) ConfirmUserEmail(c *gin.Context) {
+	var req email.UserSendConfirmEmailService
+	if err := c.ShouldBind(&req); err != nil {
 		c.JSON(200, "ParamErr")
 		return
 	}
-	res := service.SendConfirmEmail()
+	res := req.SendConfirmEmail()
 	c.JSON(200, res)
 }

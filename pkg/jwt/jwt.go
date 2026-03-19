@@ -15,10 +15,15 @@ type MyClaims struct {
 }
 
 func SetToken(userID int64) (string, error) {
+	expireHours := viper.GetInt("auth.jwt_expire")
+	if expireHours <= 0 {
+		// fallback to avoid immediately expired tokens when config is missing
+		expireHours = 24
+	}
 	c := MyClaims{
 		userID,
 		jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(time.Duration(viper.GetInt("auth.jwt_expire")) * time.Hour).Unix(),
+			ExpiresAt: time.Now().Add(time.Duration(expireHours) * time.Hour).Unix(),
 			Issuer:    "my-project",
 		},
 	}

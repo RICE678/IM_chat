@@ -1,6 +1,7 @@
 package redisdao
 
 import (
+	"IM_chat/dao/sql"
 	"IM_chat/initialize/redis"
 	"IM_chat/pkg/errcode"
 	"context"
@@ -34,12 +35,19 @@ func IsUserOnline(userID int64) (bool, error) {
 	return exists == 1, nil
 }
 
-func LogoutRedis(userID int64) error {
+func LogoutRedis(userID int64) (err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 	id := strconv.FormatInt(userID, 10)
 	onlineKey := "online:" + id
-	loginKey := "login:" + id
-	_, err := redis.RDB.Del(ctx, loginKey, onlineKey).Result()
-	return err
+	email, err := sql.SearchEmail(userID)
+	if err != nil {
+		return err
+	}
+	loginKey := "login:" + email
+	_, err = redis.RDB.Del(ctx, loginKey, onlineKey).Result()
+	if err != nil {
+		return err
+	}
+	return nil
 }

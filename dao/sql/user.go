@@ -11,7 +11,8 @@ type User struct {
 	Name       string    `db:"name"`
 	Password   string    `db:"password"`
 	Email      string    `db:"email"`
-	Picture    string    `db:"picture"`
+	Gender     int       `db:"gender"`
+	Signature  string    `db:"signature"`
 	CreateTime time.Time `db:"create_time"`
 }
 
@@ -57,11 +58,20 @@ func SearchEmail(id int64) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return user.Name, nil
+	return user.Email, nil
+}
+
+func SearchPassword(id int64) (string, error) {
+	var user User
+	err := mysql.DB().Get(&user, "select password from users where id=?", id)
+	if err != nil {
+		return "", err
+	}
+	return user.Password, nil
 }
 
 func ReSetEmail(id int64, email string) error {
-	_, err := mysql.DB().Exec("update user set email:email where id=?", email, id)
+	_, err := mysql.DB().Exec("update users set email=? where id=?", email, id)
 	if err != nil {
 		return err
 	}
@@ -69,7 +79,23 @@ func ReSetEmail(id int64, email string) error {
 }
 
 func ReSetPassword(id int64, password string) error {
-	_, err := mysql.DB().Exec("update user set password:password where id=?", password, id)
+	_, err := mysql.DB().Exec("update users set password=? where id=?", password, id)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func UpdateUserMain(userid int64, name string, gender int, signature string) error {
+	_, err := mysql.DB().Exec("update users set username=?, gender=?, signature=? where id=?", name, gender, signature, userid)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func DeleteUser(id int64) error {
+	_, err := mysql.DB().Exec("update users set id_del=? where id=?", 1, id)
 	if err != nil {
 		return err
 	}
