@@ -61,6 +61,15 @@ func SearchEmail(id int64) (string, error) {
 	return user.Email, nil
 }
 
+func SearchName(id int64) (string, error) {
+	var user User
+	err := mysql.DB().Get(&user, "select name from users where id=?", id)
+	if err != nil {
+		return "", err
+	}
+	return user.Name, nil
+}
+
 func SearchPassword(id int64) (string, error) {
 	var user User
 	err := mysql.DB().Get(&user, "select password from users where id=?", id)

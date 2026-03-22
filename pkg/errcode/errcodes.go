@@ -8,16 +8,19 @@ const (
 	InvalidEmail = 1001
 	HasSendCode  = 1002
 
-	PasswordNotMatch = 2001
-	CodeError        = 2002
-	HasRegister      = 2003
-	NotRegister      = 2004
-	NullEmail        = 2005
-	PasswordError    = 2006
-	UserNotLogin     = 2007
-	CodeNeedLogin    = 2008
-	CodeInvalidToken = 2009
-	NoPerson         = 3001
+	PasswordNotMatch    = 2001
+	CodeError           = 2002
+	HasRegister         = 2003
+	NotRegister         = 2004
+	NullEmail           = 2005
+	PasswordError       = 2006
+	UserNotLogin        = 2007
+	CodeNeedLogin       = 2008
+	CodeInvalidToken    = 2009
+	NoPerson            = 3001
+	NotSendApply        = 3002
+	ErrAlreadyRequested = 3003
+	NoSend              = 3004
 )
 
 var codeMsg = map[int]string{
@@ -28,16 +31,19 @@ var codeMsg = map[int]string{
 	InvalidEmail: "邮箱地址错误",
 	HasSendCode:  "请勿重复发送",
 
-	PasswordNotMatch: "两次密码输入不一致",
-	CodeError:        "验证码错误",
-	HasRegister:      "此邮箱已被注册",
-	NotRegister:      "注册失败",
-	NullEmail:        "邮箱尚未注册",
-	PasswordError:    "密码输入错误，请重试",
-	UserNotLogin:     "用户不在线",
-	CodeNeedLogin:    "需要登录",
-	CodeInvalidToken: "无效的token",
-	NoPerson:         "查无此人",
+	PasswordNotMatch:    "两次密码输入不一致",
+	CodeError:           "验证码错误",
+	HasRegister:         "此邮箱已被注册",
+	NotRegister:         "注册失败",
+	NullEmail:           "邮箱尚未注册",
+	PasswordError:       "密码输入错误，请重试",
+	UserNotLogin:        "用户不在线",
+	CodeNeedLogin:       "需要登录",
+	CodeInvalidToken:    "无效的token",
+	NoPerson:            "查无此人",
+	NotSendApply:        "发送申请失败",
+	ErrAlreadyRequested: "已发送请求",
+	NoSend:              "暂未发送请求",
 }
 
 func Msg(code int) string {
