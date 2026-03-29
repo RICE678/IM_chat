@@ -3,13 +3,17 @@ package models
 import "time"
 
 type AppliSearch struct {
+	ApplyID   int64  `json:"-"`
 	UserID    int64  `json:"-"`
 	SendEmail string `json:"send_email" binding:"required" form:"send_email"`
 	SendID    int64  `json:"-"`
 	Msg       string `json:"msg" binding:"required" form:"msg"`
+	Status    int    `json:"-"`
 }
 
 type Apply struct {
+	FromEmail string    `json:"from_email"`
+	FromID    int64     `json:"from_id"`
 	SendEmail string    `json:"send_email"`
 	Msg       string    `json:"msg"`
 	Time      time.Time `json:"time"`
@@ -18,10 +22,19 @@ type Apply struct {
 	Status    int       `json:"status"`
 }
 
-type Applies *[]Apply
-
-// ListAppResponse 我发出的申请列表接口响应
 type ListAppResponse struct {
 	Msg  string  `json:"msg" example:"success"`
 	List []Apply `json:"list"`
+}
+type RefuseFriend struct {
+	Account_id    int64  `json:"account_id" binding:"required"`
+	Account_email string `json:"-"`
+	UserID        int64  `json:"-"`
+	AppliID       int64  `json:"-"`
+}
+
+type AcceptFriend struct {
+	AppliID    int64 `json:"-"`
+	Account_id int64 `json:"account_id" binding:"required"`
+	UserID     int64 `json:"-"`
 }

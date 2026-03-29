@@ -2,9 +2,9 @@ package main
 
 import (
 	_ "IM_chat/docs"
-	"IM_chat/initialize/mysql"
-	"IM_chat/initialize/redis"
 	"IM_chat/middlewares"
+	"IM_chat/pkg/mysql"
+	"IM_chat/pkg/redis"
 	"IM_chat/pkg/snowflake"
 	"IM_chat/routes"
 	"IM_chat/settings"

@@ -1,7 +1,7 @@
 package email
 
 import (
-	"IM_chat/service/email"
+	"IM_chat/logic/email"
 	"github.com/gin-gonic/gin"
 )
 

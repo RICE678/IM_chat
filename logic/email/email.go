@@ -2,8 +2,8 @@ package email
 
 import (
 	"IM_chat/dao"
-	"IM_chat/initialize/redis"
 	"IM_chat/pkg/errcode"
+	"IM_chat/pkg/redis"
 	"context"
 	"fmt"
 	"github.com/jordan-wright/email"

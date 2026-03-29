@@ -21,6 +21,7 @@ const (
 	NotSendApply        = 3002
 	ErrAlreadyRequested = 3003
 	NoSend              = 3004
+	NotAddMy            = 3005
 )
 
 var codeMsg = map[int]string{
@@ -44,6 +45,7 @@ var codeMsg = map[int]string{
 	NotSendApply:        "发送申请失败",
 	ErrAlreadyRequested: "已发送请求",
 	NoSend:              "暂未发送请求",
+	NotAddMy:            "不能添加自己",
 }
 
 func Msg(code int) string {

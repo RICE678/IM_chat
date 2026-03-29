@@ -2,8 +2,8 @@ package redisdao
 
 import (
 	"IM_chat/dao/sql"
-	"IM_chat/initialize/redis"
 	"IM_chat/pkg/errcode"
+	"IM_chat/pkg/redis"
 	"context"
 	"errors"
 	"strconv"

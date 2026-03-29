@@ -2,6 +2,7 @@ package routes
 
 import (
 	"IM_chat/controller/application"
+	"IM_chat/controller/chat"
 	"IM_chat/controller/email"
 	"IM_chat/controller/user"
 	"IM_chat/middlewares"
@@ -17,6 +18,7 @@ func Setup() *gin.Engine {
 	emailController := email.NewEmailController()
 	userController := user.NewUserController()
 	applyController := application.NewAppliController()
+	chatController := chat.NewChatController()
 	r.Use(middlewares.Cors(), middlewares.GinLogger(), middlewares.GinRecovery(true))
 	r.GET("/", func(c *gin.Context) {
 		c.String(http.StatusOK, "ok")
@@ -44,7 +46,17 @@ func Setup() *gin.Engine {
 		applicationGroup.Use(middlewares.JWTAuthMiddleware())
 		{
 			applicationGroup.POST("/create", applyController.CreateAppli)
+			applicationGroup.GET("/mylist", applyController.ListMyAppli)
+			applicationGroup.PUT("/refuse", applyController.RefuseAppli)
+			applicationGroup.PUT("/accept", applyController.AcceptAppli)
 			applicationGroup.GET("/list", applyController.ListAppli)
+		}
+	}
+	chatGroup := r.Group("/chat")
+	{
+		chatGroup.Use(middlewares.JWTAuthMiddleware())
+		{
+			chatGroup.POST("/pm", chatController.SendMsg)
 		}
 	}
 	return r

@@ -1,10 +1,10 @@
 package user
 
 import (
+	user2 "IM_chat/logic/userserve"
 	"IM_chat/middlewares"
 	"IM_chat/models"
 	"IM_chat/pkg/errcode"
-	user2 "IM_chat/service/userserve"
 	"github.com/gin-gonic/gin"
 )
 
@@ -64,11 +64,6 @@ func (uc UserController) Login(c *gin.Context) {
 // @Security BearerAuth
 // @Router /user/update/pwd [put]
 func (uc UserController) ReUpdate(c *gin.Context) {
-	var req models.ReUpdate
-	if err := c.ShouldBind(&req); err != nil {
-		c.JSON(200, "ParamErr")
-		return
-	}
 	userIDVal, ok := c.Get(middlewares.CtxUserIDKey)
 	if !ok {
 		c.JSON(401, errcode.Msg(errcode.CodeNeedLogin))
@@ -77,6 +72,11 @@ func (uc UserController) ReUpdate(c *gin.Context) {
 	userID, ok := userIDVal.(int64)
 	if !ok {
 		c.JSON(401, errcode.Msg(errcode.CodeInvalidToken))
+		return
+	}
+	var req models.ReUpdate
+	if err := c.ShouldBind(&req); err != nil {
+		c.JSON(200, "ParamErr")
 		return
 	}
 	req.UserID = userID
@@ -94,11 +94,6 @@ func (uc UserController) ReUpdate(c *gin.Context) {
 // @Security BearerAuth
 // @Router /user/update/email [put]
 func (uc UserController) ReEmail(c *gin.Context) {
-	var req models.ReEmail
-	if err := c.ShouldBind(&req); err != nil {
-		c.JSON(200, "ParamErr")
-		return
-	}
 	userIDVal, ok := c.Get(middlewares.CtxUserIDKey)
 	if !ok {
 		c.JSON(401, errcode.Msg(errcode.CodeNeedLogin))
@@ -107,6 +102,11 @@ func (uc UserController) ReEmail(c *gin.Context) {
 	userID, ok := userIDVal.(int64)
 	if !ok {
 		c.JSON(401, errcode.Msg(errcode.CodeInvalidToken))
+		return
+	}
+	var req models.ReEmail
+	if err := c.ShouldBind(&req); err != nil {
+		c.JSON(200, "ParamErr")
 		return
 	}
 	req.UserID = userID
@@ -124,11 +124,6 @@ func (uc UserController) ReEmail(c *gin.Context) {
 // @Security BearerAuth
 // @Router /user/create [post]
 func (UserController) CreateUserMain(c *gin.Context) {
-	var req models.UserMain
-	if err := c.ShouldBind(&req); err != nil {
-		c.JSON(200, "ParamErr: "+err.Error())
-		return
-	}
 	userIDVal, ok := c.Get(middlewares.CtxUserIDKey)
 	if !ok {
 		c.JSON(401, errcode.Msg(errcode.CodeNeedLogin))
@@ -137,6 +132,11 @@ func (UserController) CreateUserMain(c *gin.Context) {
 	userID, ok := userIDVal.(int64)
 	if !ok {
 		c.JSON(401, errcode.Msg(errcode.CodeInvalidToken))
+		return
+	}
+	var req models.UserMain
+	if err := c.ShouldBind(&req); err != nil {
+		c.JSON(200, "ParamErr: "+err.Error())
 		return
 	}
 	req.UserID = userID

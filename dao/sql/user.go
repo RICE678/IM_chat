@@ -1,7 +1,7 @@
 package sql
 
 import (
-	"IM_chat/initialize/mysql"
+	"IM_chat/pkg/mysql"
 	"IM_chat/pkg/snowflake"
 	"time"
 )

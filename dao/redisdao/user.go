@@ -1,8 +1,8 @@
 package redisdao
 
 import (
-	"IM_chat/initialize/redis"
 	"IM_chat/models"
+	"IM_chat/pkg/redis"
 	"context"
 	"strconv"
 	"time"
