@@ -5,7 +5,7 @@ app:
   start_time: "2026-03-10"
   machine_id: 1
 mysql:
-  host: "192.168.78.200"
+  host: "47.110.92.199"
   port: 3307
   user: "root"
   password: "sta_go"
@@ -17,11 +17,10 @@ log:
   max_age: 30
   max_backups: 7
 redis:
-  host: "192.168.78.200"
+  host: "47.110.92.199"
   port: 6379
   db: 0
   pool_size: 1000
-  password: "sta_go"
 
 email:
   from: "2530225403@qq.com"

@@ -17,6 +17,7 @@ const (
 	UserNotLogin        = 2007
 	CodeNeedLogin       = 2008
 	CodeInvalidToken    = 2009
+	DontSendCode        = 2010
 	NoPerson            = 3001
 	NotSendApply        = 3002
 	ErrAlreadyRequested = 3003
@@ -46,6 +47,7 @@ var codeMsg = map[int]string{
 	ErrAlreadyRequested: "已发送请求",
 	NoSend:              "暂未发送请求",
 	NotAddMy:            "不能添加自己",
+	DontSendCode:        "发送验证码失败",
 }
 
 func Msg(code int) string {

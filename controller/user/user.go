@@ -167,6 +167,14 @@ func (uc UserController) Heartbeat(c *gin.Context) {
 	c.JSON(200, res)
 }
 
+// DelUser godoc
+// @Summary 删除用户
+// @Tags user
+// @Accept json
+// @Produce json
+// @Success 200 {string} string
+// @Security BearerAuth
+// @Router /user/deleteUser [delete]
 func (uc UserController) DelUser(c *gin.Context) {
 	userIDVal, ok := c.Get(middlewares.CtxUserIDKey)
 	if !ok {
@@ -178,6 +186,30 @@ func (uc UserController) DelUser(c *gin.Context) {
 		c.JSON(401, errcode.Msg(errcode.CodeInvalidToken))
 	}
 	res := user2.DelUserDetail(userID)
+	c.JSON(200, res)
+	return
+}
+
+// ReCode godoc
+// @Summary 重新发送验证码以便修改密码
+// @Tags user
+// @Accept json
+// @Produce json
+// @Success 200 {string} string
+// @Security BearerAuth
+// @Router /user/pwd/code/send [post]
+func (UserController) ReCode(c *gin.Context) {
+	userIDVal, ok := c.Get(middlewares.CtxUserIDKey)
+	if !ok {
+		c.JSON(401, errcode.Msg(errcode.CodeNeedLogin))
+		return
+	}
+	userID, ok := userIDVal.(int64)
+	if !ok {
+		c.JSON(401, errcode.Msg(errcode.CodeInvalidToken))
+		return
+	}
+	res := user2.ReCodeSend(userID)
 	c.JSON(200, res)
 	return
 }

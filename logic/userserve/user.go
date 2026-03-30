@@ -4,6 +4,7 @@ import (
 	"IM_chat/dao"
 	redis2 "IM_chat/dao/redisdao"
 	"IM_chat/dao/sql"
+	email2 "IM_chat/logic/email"
 	"IM_chat/models"
 	"IM_chat/pkg/errcode"
 	"IM_chat/pkg/jwt"
@@ -121,4 +122,25 @@ func DelUserDetail(userID int64) string {
 		return errcode.Msg(errcode.ERROR)
 	}
 	return errcode.Msg(errcode.ERROR)
+}
+
+func ReCodeSend(userID int64) string {
+	var email string
+	var err error
+	if email, err = sql.SearchEmail(userID); err != nil {
+		return errcode.Msg(errcode.ERROR)
+	}
+	if !dao.VerifyEmailFormat(email) {
+		return errcode.Msg(errcode.InvalidEmail)
+	}
+	if redis.RDB.Get(context.Background(), "send-email:"+email).Val() != "" {
+		return errcode.Msg(errcode.HasSendCode)
+	}
+	code := dao.GetConfirmCode()
+	if err = email2.SendConfirmMessage(email, code); err != nil {
+		return errcode.Msg(errcode.DontSendCode)
+	}
+	redis.RDB.Set(context.Background(), "email:"+email, code, time.Minute*30)
+	redis.RDB.Set(context.Background(), "send-email:"+email, code, time.Minute*1)
+	return errcode.Msg(errcode.SUCCESS)
 }

@@ -44,12 +44,12 @@ func (service *UserSendConfirmEmailService) SendConfirmEmail() string {
 		return errcode.Msg(errcode.HasSendCode)
 	}
 	code := dao.GetConfirmCode()
-	redis.RDB.Set(context.Background(), "email:"+service.UserEmail, code, time.Minute*30)
 	err := SendConfirmMessage(service.UserEmail, code)
 	if err != nil {
-		return err.Error()
+		return errcode.Msg(errcode.DontSendCode)
 	}
-	// 设置每个邮箱发送邮件的时间 此处设为3min
-	redis.RDB.Set(context.Background(), "send-email:"+service.UserEmail, code, time.Minute*3)
+	redis.RDB.Set(context.Background(), "email:"+service.UserEmail, code, time.Minute*30)
+	// 设置每个邮箱发送邮件的时间 此处设为1min
+	redis.RDB.Set(context.Background(), "send-email:"+service.UserEmail, code, time.Minute*1)
 	return errcode.Msg(errcode.SUCCESS)
 }

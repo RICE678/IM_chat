@@ -34,6 +34,7 @@ func Setup() *gin.Engine {
 		userGroup.POST("/login", userController.Login)
 		userGroup.Use(middlewares.JWTAuthMiddleware())
 		{
+			userGroup.POST("/pwd/code/send", userController.ReCode)
 			userGroup.POST("/heartbeat", userController.Heartbeat)
 			userGroup.PUT("/update/pwd", userController.ReUpdate)
 			userGroup.PUT("/update/email", userController.ReEmail)
