@@ -1,0 +1,428 @@
+basePath: /
+definitions:
+  email.UserSendConfirmEmailService:
+    properties:
+      email:
+        type: string
+    required:
+    - email
+    type: object
+  models.AcceptFriend:
+    properties:
+      account_id:
+        type: integer
+    required:
+    - account_id
+    type: object
+  models.AppliSearch:
+    properties:
+      msg:
+        type: string
+      send_email:
+        type: string
+    required:
+    - msg
+    - send_email
+    type: object
+  models.Apply:
+    properties:
+      from_email:
+        type: string
+      from_id:
+        type: integer
+      msg:
+        type: string
+      send_email:
+        type: string
+      send_id:
+        type: integer
+      send_name:
+        type: string
+      status:
+        type: integer
+      time:
+        type: string
+    type: object
+  models.ListAppResponse:
+    properties:
+      list:
+        items:
+          $ref: '#/definitions/models.Apply'
+        type: array
+      msg:
+        example: success
+        type: string
+    type: object
+  models.LoginResponse:
+    properties:
+      msg:
+        type: string
+      token:
+        type: string
+      user_id:
+        type: integer
+    type: object
+  models.LoginServer:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  models.ReEmail:
+    properties:
+      code:
+        type: string
+      new_email:
+        type: string
+    required:
+    - code
+    - new_email
+    type: object
+  models.ReUpdate:
+    properties:
+      code:
+        type: string
+      new_password:
+        type: string
+    required:
+    - code
+    - new_password
+    type: object
+  models.RefuseFriend:
+    properties:
+      account_id:
+        type: integer
+    required:
+    - account_id
+    type: object
+  models.RegisterServer:
+    properties:
+      code:
+        type: string
+      email:
+        type: string
+      password:
+        type: string
+      re_password:
+        type: string
+    required:
+    - code
+    - email
+    - password
+    - re_password
+    type: object
+  models.UserMain:
+    properties:
+      gender:
+        description: 0为男 1为女 2为未知
+        type: integer
+      name:
+        type: string
+      signature:
+        type: string
+    required:
+    - gender
+    - name
+    - signature
+    type: object
+info:
+  contact: {}
+  description: IM Chat backend API documentation.
+  title: IM Chat API
+  version: "1.0"
+paths:
+  /application/accept:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: 同意申请请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.AcceptFriend'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: 同意好友申请
+      tags:
+      - application
+  /application/create:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 申请请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.AppliSearch'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: 申请请求添加好友
+      tags:
+      - application
+  /application/list:
+    get:
+      consumes:
+      - application/json
+      description: 返回我收到的好友申请列表
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: msg=success 时 list 为申请数组
+          schema:
+            $ref: '#/definitions/models.ListAppResponse'
+      security:
+      - BearerAuth: []
+      summary: 查看全部接收到的申请
+      tags:
+      - application
+  /application/mylist:
+    get:
+      consumes:
+      - application/json
+      description: 返回我发出的好友申请列表
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: msg=success 时 list 为申请数组
+          schema:
+            $ref: '#/definitions/models.ListAppResponse'
+      security:
+      - BearerAuth: []
+      summary: 查看全部已发申请
+      tags:
+      - application
+  /application/refuse:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: 拒绝申请请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.RefuseFriend'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: 拒绝好友申请
+      tags:
+      - application
+  /email/send:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 邮箱验证码请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/email.UserSendConfirmEmailService'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: 发送邮箱验证码
+      tags:
+      - email
+  /user/create:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 完善资料请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.UserMain'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: 完善用户资料
+      tags:
+      - user
+  /user/deleteUser:
+    delete:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: 删除用户
+      tags:
+      - user
+  /user/heartbeat:
+    post:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: 心跳续期
+      tags:
+      - user
+  /user/login:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 登录请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.LoginServer'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.LoginResponse'
+      summary: 用户登录
+      tags:
+      - user
+  /user/pwd/code/send:
+    post:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: 重新发送验证码以便修改密码
+      tags:
+      - user
+  /user/register:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 注册请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.RegisterServer'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: 用户注册
+      tags:
+      - user
+  /user/update/email:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: 修改邮箱请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.ReEmail'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: 修改邮箱
+      tags:
+      - user
+  /user/update/pwd:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: 修改密码请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.ReUpdate'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: 修改密码
+      tags:
+      - user
+schemes:
+- http
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
