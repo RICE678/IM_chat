@@ -424,3 +424,5 @@
 {"level":"INFO","time":"2026-03-31T22:11:22.885+0800","caller":"gin@v1.12.0/context.go:192","msg":"/chat/history","status":500,"method":"GET","path":"/chat/history","query":"","ip":"::1","user-agent":"PostmanRuntime/7.51.1","errors":"","cost":0.0004201}
 {"level":"INFO","time":"2026-03-31T22:21:42.742+0800","caller":"runtime/proc.go:285","msg":"Shutdown Server..."}
 {"level":"INFO","time":"2026-03-31T22:21:42.742+0800","caller":"runtime/proc.go:285","msg":"Server exit"}
+{"level":"INFO","time":"2026-04-01T22:15:49.322+0800","caller":"runtime/proc.go:285","msg":"Shutdown Server..."}
+{"level":"INFO","time":"2026-04-01T22:15:49.337+0800","caller":"runtime/proc.go:285","msg":"Server exit"}
