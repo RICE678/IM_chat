@@ -121,7 +121,7 @@ func DelUserDetail(userID int64) string {
 	if err := sql.DeleteUser(userID); err != nil {
 		return errcode.Msg(errcode.ERROR)
 	}
-	return errcode.Msg(errcode.ERROR)
+	return errcode.Msg(errcode.SUCCESS)
 }
 
 func ReCodeSend(userID int64) string {

@@ -43,6 +43,50 @@ definitions:
       time:
         type: string
     type: object
+  models.ChatMsg:
+    properties:
+      context:
+        type: string
+      msg_type:
+        type: integer
+      receiver_id:
+        type: integer
+    required:
+    - context
+    - msg_type
+    - receiver_id
+    type: object
+  models.ContactResponse:
+    properties:
+      error:
+        type: string
+      friend:
+        items:
+          $ref: '#/definitions/models.MainFriend'
+        type: array
+    type: object
+  models.HistoryMsg:
+    properties:
+      msg:
+        items:
+          $ref: '#/definitions/models.ChatMsg'
+        type: array
+      page:
+        type: integer
+      receiver_id:
+        type: integer
+      size:
+        type: integer
+    required:
+    - receiver_id
+    type: object
+  models.HistoryResponse:
+    properties:
+      err:
+        type: string
+      msg:
+        $ref: '#/definitions/models.HistoryMsg'
+    type: object
   models.ListAppResponse:
     properties:
       list:
@@ -72,6 +116,15 @@ definitions:
     - email
     - password
     type: object
+  models.MainFriend:
+    properties:
+      friend_id:
+        type: integer
+      last_msg_time:
+        type: string
+      unread:
+        type: integer
+    type: object
   models.ReEmail:
     properties:
       code:
@@ -91,6 +144,13 @@ definitions:
     required:
     - code
     - new_password
+    type: object
+  models.ReadContact:
+    properties:
+      friend_id:
+        type: integer
+    required:
+    - friend_id
     type: object
   models.RefuseFriend:
     properties:
@@ -238,6 +298,86 @@ paths:
       summary: 拒绝好友申请
       tags:
       - application
+  /chat/history:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.HistoryResponse'
+      security:
+      - BearerAuth: []
+      summary: 查看历史聊天记录
+      tags:
+      - chat
+  /chat/pm:
+    get:
+      description: '建立私聊长连接。鉴权支持 Authorization: Bearer <token>，也支持 query token'
+      parameters:
+      - description: JWT token
+        in: query
+        name: token
+        type: string
+      responses:
+        "101":
+          description: Switching Protocols
+          schema:
+            type: string
+        "401":
+          description: 未登录或 token 无效
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: 私聊 WebSocket 收发消息
+      tags:
+      - chat
+  /chat/read:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 会话已读请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.ReadContact'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: 更改消息为已读
+      tags:
+      - chat
+  /chat/unread:
+    get:
+      consumes:
+      - application/json
+      description: 展示侧边栏私聊情况
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ContactResponse'
+      security:
+      - BearerAuth: []
+      summary: 私聊
+      tags:
+      - chat
   /email/send:
     post:
       consumes:

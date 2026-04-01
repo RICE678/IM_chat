@@ -12,14 +12,17 @@ const CtxUserIDKey = "userID"
 
 func JWTAuthMiddleware() func(c *gin.Context) {
 	return func(c *gin.Context) {
-		authHeader := strings.TrimSpace(c.Request.Header.Get("Authorization"))
-		if authHeader == "" {
+		tokenInput := strings.TrimSpace(c.Request.Header.Get("Authorization"))
+		if tokenInput == "" {
+			tokenInput = strings.TrimSpace(c.Query("token"))
+		}
+		if tokenInput == "" {
 			c.JSON(http.StatusUnauthorized, gin.H{"msg": errcode.Msg(errcode.CodeNeedLogin)})
 			c.Abort()
 			return
 		}
-		tokenStr := authHeader
-		parts := strings.SplitN(authHeader, " ", 2)
+		tokenStr := tokenInput
+		parts := strings.SplitN(tokenInput, " ", 2)
 		if len(parts) == 2 {
 			if !strings.EqualFold(parts[0], "Bearer") || strings.TrimSpace(parts[1]) == "" {
 				c.JSON(http.StatusUnauthorized, gin.H{"msg": errcode.Msg(errcode.CodeInvalidToken)})

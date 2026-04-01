@@ -185,6 +185,138 @@ const docTemplate = `{
                 }
             }
         },
+        "/chat/history": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "chat"
+                ],
+                "summary": "查看历史聊天记录",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.HistoryResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/chat/pm": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "建立私聊长连接。鉴权支持 Authorization: Bearer \u003ctoken\u003e，也支持 query token",
+                "tags": [
+                    "chat"
+                ],
+                "summary": "私聊 WebSocket 收发消息",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "JWT token",
+                        "name": "token",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "101": {
+                        "description": "Switching Protocols",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录或 token 无效",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/chat/read": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "chat"
+                ],
+                "summary": "更改消息为已读",
+                "parameters": [
+                    {
+                        "description": "会话已读请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.ReadContact"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/chat/unread": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "展示侧边栏私聊情况",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "chat"
+                ],
+                "summary": "私聊",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.ContactResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/email/send": {
             "post": {
                 "consumes": [
@@ -547,6 +679,73 @@ const docTemplate = `{
                 }
             }
         },
+        "models.ChatMsg": {
+            "type": "object",
+            "required": [
+                "context",
+                "msg_type",
+                "receiver_id"
+            ],
+            "properties": {
+                "context": {
+                    "type": "string"
+                },
+                "msg_type": {
+                    "type": "integer"
+                },
+                "receiver_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.ContactResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "friend": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.MainFriend"
+                    }
+                }
+            }
+        },
+        "models.HistoryMsg": {
+            "type": "object",
+            "required": [
+                "receiver_id"
+            ],
+            "properties": {
+                "msg": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.ChatMsg"
+                    }
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "receiver_id": {
+                    "type": "integer"
+                },
+                "size": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.HistoryResponse": {
+            "type": "object",
+            "properties": {
+                "err": {
+                    "type": "string"
+                },
+                "msg": {
+                    "$ref": "#/definitions/models.HistoryMsg"
+                }
+            }
+        },
         "models.ListAppResponse": {
             "type": "object",
             "properties": {
@@ -591,6 +790,20 @@ const docTemplate = `{
                 }
             }
         },
+        "models.MainFriend": {
+            "type": "object",
+            "properties": {
+                "friend_id": {
+                    "type": "integer"
+                },
+                "last_msg_time": {
+                    "type": "string"
+                },
+                "unread": {
+                    "type": "integer"
+                }
+            }
+        },
         "models.ReEmail": {
             "type": "object",
             "required": [
@@ -618,6 +831,17 @@ const docTemplate = `{
                 },
                 "new_password": {
                     "type": "string"
+                }
+            }
+        },
+        "models.ReadContact": {
+            "type": "object",
+            "required": [
+                "friend_id"
+            ],
+            "properties": {
+                "friend_id": {
+                    "type": "integer"
                 }
             }
         },

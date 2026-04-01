@@ -23,6 +23,7 @@ const (
 	ErrAlreadyRequested = 3003
 	NoSend              = 3004
 	NotAddMy            = 3005
+	ErrorForList        = 4001
 )
 
 var codeMsg = map[int]string{
@@ -48,6 +49,8 @@ var codeMsg = map[int]string{
 	NoSend:              "暂未发送请求",
 	NotAddMy:            "不能添加自己",
 	DontSendCode:        "发送验证码失败",
+
+	ErrorForList: "读取用户列表失败",
 }
 
 func Msg(code int) string {

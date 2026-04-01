@@ -57,7 +57,10 @@ func Setup() *gin.Engine {
 	{
 		chatGroup.Use(middlewares.JWTAuthMiddleware())
 		{
-			chatGroup.POST("/pm", chatController.SendMsg)
+			chatGroup.GET("/pm", chatController.SendMsg)
+			chatGroup.GET("/history", chatController.SearchHistory)
+			chatGroup.GET("/unread", chatController.SearchUnread)
+			chatGroup.POST("/read", chatController.EnterRead)
 		}
 	}
 	return r
