@@ -426,3 +426,10 @@
 {"level":"INFO","time":"2026-03-31T22:21:42.742+0800","caller":"runtime/proc.go:285","msg":"Server exit"}
 {"level":"INFO","time":"2026-04-01T22:15:49.322+0800","caller":"runtime/proc.go:285","msg":"Shutdown Server..."}
 {"level":"INFO","time":"2026-04-01T22:15:49.337+0800","caller":"runtime/proc.go:285","msg":"Server exit"}
+{"level":"INFO","time":"2026-04-02T15:59:14.606+0800","caller":"runtime/proc.go:285","msg":"Shutdown Server..."}
+{"level":"INFO","time":"2026-04-02T15:59:14.626+0800","caller":"runtime/proc.go:285","msg":"Server exit"}
+{"level":"INFO","time":"2026-04-02T18:08:11.213+0800","caller":"gin@v1.12.0/context.go:192","msg":"/user/login","status":200,"method":"POST","path":"/user/login","query":"","ip":"::1","user-agent":"PostmanRuntime/7.51.1","errors":"","cost":0.51313}
+{"level":"INFO","time":"2026-04-02T18:23:22.799+0800","caller":"runtime/proc.go:285","msg":"Shutdown Server..."}
+{"level":"INFO","time":"2026-04-02T18:23:22.799+0800","caller":"runtime/proc.go:285","msg":"Server exit"}
+{"level":"INFO","time":"2026-04-02T19:27:34.491+0800","caller":"runtime/proc.go:285","msg":"Shutdown Server..."}
+{"level":"INFO","time":"2026-04-02T19:27:34.516+0800","caller":"runtime/proc.go:285","msg":"Server exit"}
