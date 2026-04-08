@@ -3,12 +3,13 @@ package sql
 import (
 	"IM_chat/pkg/mysql"
 	"IM_chat/pkg/snowflake"
+	"strconv"
 	"time"
 )
 
 type User struct {
 	ID         int64     `db:"id"`
-	Name       string    `db:"name"`
+	Name       string    `db:"username"`
 	Password   string    `db:"password"`
 	Email      string    `db:"email"`
 	Gender     int       `db:"gender"`
@@ -27,7 +28,14 @@ func IsRegisterEmail(email string) bool {
 }
 
 func AddRegister(email, password string) error {
-	_, err := mysql.DB().Exec("insert into users(id,password,email)values(?,?,?)", snowflake.Generate(), password, email)
+	id := snowflake.Generate()
+	idString := strconv.FormatInt(id, 10)
+	suffix := idString
+	if len(idString) > 6 {
+		suffix = idString[len(idString)-6:]
+	}
+	name := "用户" + suffix
+	_, err := mysql.DB().Exec("insert into users(id,username,password,email)values(?,?,?,?)", id, name, password, email)
 	if err != nil {
 		return err
 	}
@@ -63,7 +71,7 @@ func SearchEmail(id int64) (string, error) {
 
 func SearchName(id int64) (string, error) {
 	var user User
-	err := mysql.DB().Get(&user, "select name from users where id=?", id)
+	err := mysql.DB().Get(&user, "select username from users where id=?", id)
 	if err != nil {
 		return "", err
 	}
@@ -96,7 +104,10 @@ func ReSetPassword(id int64, password string) error {
 }
 
 func UpdateUserMain(userid int64, name string, gender int, signature string) error {
-	_, err := mysql.DB().Exec("update users set username=?, gender=?, signature=? where id=?", name, gender, signature, userid)
+	_, err := mysql.DB().Exec(
+		"update users set username=IF(?='', username, ?), gender=?, signature=? where id=?",
+		name, name, gender, signature, userid,
+	)
 	if err != nil {
 		return err
 	}

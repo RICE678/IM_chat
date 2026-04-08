@@ -8,14 +8,24 @@ import (
 	"strconv"
 )
 
-func SearchAppli(user *models.AppliSearch) string {
+func SearchAppli(user *models.FindPerson) (find models.FindMiddle, err1 string) {
 	var err error
 	if user.SendID, err = sql.SearchID(user.SendEmail); err != nil || user.UserID <= 0 {
-		return errcode.Msg(errcode.NoPerson)
+		err1 = errcode.Msg(errcode.NoPerson)
+		return
 	}
-	if user.SendID == user.ApplyID {
-		return errcode.Msg(errcode.NotAddMy)
+	if user.SendID == user.UserID {
+		err1 = errcode.Msg(errcode.NotAddMy)
+		return
 	}
+	find.SendEmail = user.SendEmail
+	find.SendID = user.UserID
+	find.SendName, _ = sql.SearchName(user.UserID)
+	err1 = errcode.Msg(errcode.SUCCESS)
+	return
+}
+
+func GetAppli(user *models.AppliSearch) string {
 	ok, err := redisdao.SetApplyLock(user.UserID, user.SendID)
 	if err != nil {
 		return errcode.Msg(errcode.ERROR)
@@ -34,7 +44,6 @@ func SearchAppli(user *models.AppliSearch) string {
 	}
 	return errcode.Msg(errcode.SUCCESS)
 }
-
 func ListApp(userID int64) ([]models.Apply, string) {
 	rows, err := sql.ListApplySent(userID)
 	if err != nil {

@@ -45,11 +45,7 @@ func HandlePrivateMessage(sender *Client, msg *models.WsMsg) {
 		ReceiverID: msg.ReceiverID,
 		MsgType:    msg.MsgType,
 	}
-	select {
-	case sender.Send <- ack:
-
-	default:
-	}
+	sender.Send(ack)
 }
 
 func HistoryMain(user *models.HistoryMsg) string {

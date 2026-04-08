@@ -14,6 +14,38 @@ func NewAppliController() *AppliController {
 	return new(AppliController)
 }
 
+// SearchAppli godoc
+// @Summary 查看待添加好友
+// @Tags application
+// @Produce json
+// @Param username query string false "按用户名模糊搜索"
+// @Success 200 {object} models.FindEnd
+// @Security BearerAuth
+// @Router /application/search [get]
+func (AppliController) SearchAppli(c *gin.Context) {
+	userIDVal, ok := c.Get(middlewares.CtxUserIDKey)
+	if !ok {
+		c.JSON(401, errcode.Msg(errcode.CodeNeedLogin))
+		return
+	}
+	var req models.FindPerson
+	req.UserID, ok = userIDVal.(int64)
+	if !ok {
+		c.JSON(401, errcode.Msg(errcode.CodeInvalidToken))
+		return
+	}
+
+	if err := c.ShouldBindQuery(&req); err != nil {
+		c.JSON(200, "ParamErr")
+		return
+	}
+	res, err := applicate.SearchAppli(&req)
+	c.JSON(200, models.FindEnd{
+		Err:  err,
+		Find: &res,
+	})
+}
+
 // CreateAppli godoc
 // @Summary 申请请求添加好友
 // @Tags application
@@ -39,7 +71,7 @@ func (AppliController) CreateAppli(c *gin.Context) {
 		c.JSON(200, "ParamErr")
 		return
 	}
-	res := applicate.SearchAppli(&req)
+	res := applicate.GetAppli(&req)
 	c.JSON(200, res)
 }
 

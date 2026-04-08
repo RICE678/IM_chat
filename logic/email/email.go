@@ -49,7 +49,6 @@ func (service *UserSendConfirmEmailService) SendConfirmEmail() string {
 		return errcode.Msg(errcode.DontSendCode)
 	}
 	redis.RDB.Set(context.Background(), "email:"+service.UserEmail, code, time.Minute*30)
-	// 设置每个邮箱发送邮件的时间 此处设为1min
 	redis.RDB.Set(context.Background(), "send-email:"+service.UserEmail, code, time.Minute*1)
 	return errcode.Msg(errcode.SUCCESS)
 }

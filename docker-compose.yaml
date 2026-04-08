@@ -1,0 +1,46 @@
+version: '3'
+
+services:
+  redis:
+    image: redis:latest
+    ports:
+      - 6379:6379
+    container_name: redis
+    volumes:
+      - ./components/redis/data:/data
+      - ./components/redis/config/redis.conf:/usr/local/etc/redis/redis.conf
+    environment:
+      TZ: Asia/Shanghai
+    restart: always
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
+
+  mysql:
+    image: mysql:latest
+    ports:
+      - 3307:3306
+    container_name: mysql
+    volumes:
+      - ./components/mysql/data:/var/lib/mysql
+      - /etc/localtime:/etc/localtime
+    environment:
+      MYSQL_ROOT_PASSWORD: sta_go
+      TZ: Asia/Shanghai
+    restart: always
+  kafka:
+    image: bitnami/kafka:latest
+    ports:
+      - "9092:9092"
+    container_name: kafka
+    environment:
+      - KAFKA_CFG_NODE_ID=0
+      - KAFKA_CFG_PROCESS_ROLES=controller,broker
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://127.0.0.1:9092
+      - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true
+      - ALLOW_PLAINTEXT_LISTENER=yes
+    volumes:
+      - kafka_data:/bitnami/kafka
+    restart: unless-stopped

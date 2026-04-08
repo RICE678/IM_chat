@@ -191,7 +191,7 @@ func (uc UserController) DelUser(c *gin.Context) {
 }
 
 // ReCode godoc
-// @Summary 重新发送验证码以便修改密码
+// @Summary 发送验证码以便验证身份
 // @Tags user
 // @Accept json
 // @Produce json

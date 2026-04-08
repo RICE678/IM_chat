@@ -181,6 +181,44 @@
                 }
             }
         },
+        "/application/search": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "application"
+                ],
+                "summary": "查看待添加好友",
+                "parameters": [
+                    {
+                        "description": "申请请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.FindPerson"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.FindEnd"
+                        }
+                    }
+                }
+            }
+        },
         "/chat/history": {
             "get": {
                 "security": [
@@ -203,45 +241,6 @@
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/models.HistoryResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/chat/pm": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "建立私聊长连接。鉴权支持 Authorization: Bearer \u003ctoken\u003e，也支持 query token",
-                "tags": [
-                    "chat"
-                ],
-                "summary": "私聊 WebSocket 收发消息",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "JWT token",
-                        "name": "token",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "101": {
-                        "description": "Switching Protocols",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "401": {
-                        "description": "未登录或 token 无效",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
                         }
                     }
                 }
@@ -487,7 +486,7 @@
                 "tags": [
                     "user"
                 ],
-                "summary": "重新发送验证码以便修改密码",
+                "summary": "发送验证码以便验证身份",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -705,6 +704,39 @@
                     "items": {
                         "$ref": "#/definitions/models.MainFriend"
                     }
+                }
+            }
+        },
+        "models.FindEnd": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "find": {
+                    "$ref": "#/definitions/models.FindMiddle"
+                }
+            }
+        },
+        "models.FindMiddle": {
+            "type": "object",
+            "properties": {
+                "ID": {
+                    "type": "integer"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.FindPerson": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
                 }
             }
         },

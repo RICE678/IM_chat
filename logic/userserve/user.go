@@ -94,13 +94,17 @@ func ReEmail(user *models.ReEmail) string {
 	if user.Email, err = sql.SearchEmail(user.UserID); err != nil {
 		return errcode.Msg(errcode.ERROR)
 	}
+	codes := redis.RDB.Get(context.Background(), "email:"+user.Email).Val()
+	if codes != user.Code {
+		return errcode.Msg(errcode.CodeError)
+	}
 	if user.Password, err = sql.SearchPassword(user.UserID); err != nil {
 		return errcode.Msg(errcode.ERROR)
 	}
-	user.Password = dao.Md5(user.Password)
 	if err = sql.ReSetEmail(user.UserID, user.NewEmail); err != nil {
 		return errcode.Msg(errcode.ERROR)
 	}
+	redis.RDB.Del(context.Background(), "email:"+user.Email)
 	if err = redis2.ReEmailRedis(user); err != nil {
 		return errcode.Msg(errcode.ERROR)
 	}

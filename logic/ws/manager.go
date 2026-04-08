@@ -26,7 +26,7 @@ func (m *Manager) Register(c *Client) {
 	if old != nil {
 		old.Close()
 	}
-	zap.L().Info("user onlines", zap.Int64("userID", c.UserID))
+	zap.L().Info("user online", zap.Int64("userID", c.UserID))
 }
 
 func (m *Manager) Unregister(c *Client) {
@@ -43,12 +43,9 @@ func (m *Manager) Send(userID int64, msg *models.WsMsg) bool {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	if client, ok := m.clients[userID]; ok {
-		select {
-		case client.Send <- msg:
-			return true
-		default:
-			return false
-		}
+		client.Send(msg)
+		return true
+
 	}
 	return false
 }

@@ -46,6 +46,7 @@ func Setup() *gin.Engine {
 	{
 		applicationGroup.Use(middlewares.JWTAuthMiddleware())
 		{
+			applicationGroup.GET("/search", applyController.SearchAppli)
 			applicationGroup.POST("/create", applyController.CreateAppli)
 			applicationGroup.GET("/mylist", applyController.ListMyAppli)
 			applicationGroup.PUT("/refuse", applyController.RefuseAppli)
@@ -57,11 +58,12 @@ func Setup() *gin.Engine {
 	{
 		chatGroup.Use(middlewares.JWTAuthMiddleware())
 		{
-			chatGroup.GET("/pm", chatController.SendMsg)
+
 			chatGroup.GET("/history", chatController.SearchHistory)
 			chatGroup.GET("/unread", chatController.SearchUnread)
 			chatGroup.POST("/read", chatController.EnterRead)
 		}
 	}
+	r.Any("/socket.io/*any", chatController.ServeSocketIO)
 	return r
 }

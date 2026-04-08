@@ -6,53 +6,29 @@ import (
 	"IM_chat/models"
 	"IM_chat/pkg/errcode"
 	"github.com/gin-gonic/gin"
-	"github.com/gorilla/websocket"
-	"net/http"
+	socketio "github.com/googollee/go-socket.io"
 )
 
-type ChatController struct{}
+type ChatController struct {
+	SocketServer *socketio.Server
+}
 
 func NewChatController() *ChatController {
-	return &ChatController{}
+	server := ws.NewSocketIOServer()
+	go server.Serve()
+	return &ChatController{SocketServer: server}
 }
 
-var upgrader = websocket.Upgrader{
-	ReadBufferSize:  1024,
-	WriteBufferSize: 1024,
-	CheckOrigin: func(r *http.Request) bool {
-		return true
-	},
+func (cc *ChatController) ServeSocketIO(c *gin.Context) {
+	cc.SocketServer.ServeHTTP(c.Writer, c.Request)
 }
 
-// SendMsg godoc
-// @Summary 私聊 WebSocket 收发消息
-// @Description 建立私聊长连接。鉴权支持 Authorization: Bearer <token>，也支持 query token
-// @Tags chat
-// @Security BearerAuth
-// @Param token query string false "JWT token"
-// @Success 101 {string} string "Switching Protocols"
-// @Failure 401 {object} map[string]string "未登录或 token 无效"
-// @Router /chat/pm [get]
-func (ChatController) SendMsg(c *gin.Context) {
-	userVal, ok := c.Get(middlewares.CtxUserIDKey)
-	if !ok {
-		c.JSON(401, errcode.Msg(errcode.CodeNeedLogin))
-		return
-	}
-	userID, ok := userVal.(int64)
-	if !ok {
-		c.JSON(401, errcode.Msg(errcode.CodeInvalidToken))
-		return
-	}
-	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
-	if err != nil {
-		c.JSON(400, "websocket upgrade failed")
-		return
-	}
-	client := ws.NewClient(userID, conn)
-	ws.GlobalManager.Register(client)
-	go client.WritePump()
-	go client.ReadPump()
+func (cc *ChatController) Shutdown() {
+	_ = cc.SocketServer.Close()
+}
+
+func (cc *ChatController) SendMsg(c *gin.Context) {
+	cc.ServeSocketIO(c)
 }
 
 // SearchHistory godoc

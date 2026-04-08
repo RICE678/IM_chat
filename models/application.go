@@ -11,6 +11,22 @@ type AppliSearch struct {
 	Status    int    `json:"-"`
 }
 
+type FindPerson struct {
+	SendEmail string `json:"email"`
+	UserID    int64  `json:"-"`
+	SendID    int64  `json:"-"`
+}
+type FindMiddle struct {
+	SendEmail string `json:"email"`
+	SendName  string `json:"name"`
+	SendID    int64  `json:"ID"`
+}
+
+type FindEnd struct {
+	Find *FindMiddle
+	Err  string `json:"error"`
+}
+
 type Apply struct {
 	FromEmail string    `json:"from_email"`
 	FromID    int64     `json:"from_id"`
