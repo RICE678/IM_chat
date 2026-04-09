@@ -21,6 +21,16 @@ redis:
   port: 6379
   db: 0
   pool_size: 1000
+kafka:
+  brokers:
+   - "47.110.92.199:9092"
+  topic: "im_message"
+  topics:
+    GroupMsgRaw: "group_msg_raw"
+    GroupMsgPublish: "group_msg_publish"
+    private_msg: "private_msg"
+    read_events: "read_events"
+
 
 email:
   from: "2530225403@qq.com"

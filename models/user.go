@@ -37,7 +37,14 @@ type ReEmail struct {
 
 type UserMain struct {
 	Name      string `form:"name" json:"name"`
-	Gender    int    `form:"gender" json:"gender" binding:"required"` //0为男 1为女 2为未知
-	Signature string `form:"signature" json:"signature" binding:"required"`
+	Gender    int    `form:"gender" json:"gender"` //0为男 1为女 2为未知
+	Signature string `form:"signature" json:"signature"`
 	UserID    int64  `json:"-"`
+	Picture   string `form:"picture" json:"picture"`
+	Email     string `form:"email" json:"email"`
+}
+
+type UserMainReturn struct {
+	User UserMain `json:"user,omitempty"`
+	Err  string   `json:"err"`
 }

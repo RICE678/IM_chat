@@ -17,25 +17,27 @@ type FindPerson struct {
 	SendID    int64  `json:"-"`
 }
 type FindMiddle struct {
-	SendEmail string `json:"email"`
-	SendName  string `json:"name"`
-	SendID    int64  `json:"ID"`
+	SendEmail    string `json:"email"`
+	SendName     string `json:"name"`
+	SendID       int64  `json:"ID"`
+	SendPictures string `json:"pictures"`
 }
 
 type FindEnd struct {
-	Find *FindMiddle
-	Err  string `json:"error"`
+	Find *FindMiddle `json:"find,omitempty"`
+	Err  string      `json:"error"`
 }
 
 type Apply struct {
-	FromEmail string    `json:"from_email"`
-	FromID    int64     `json:"from_id"`
-	SendEmail string    `json:"send_email"`
-	Msg       string    `json:"msg"`
-	Time      time.Time `json:"time"`
-	SendName  string    `json:"send_name"`
-	SendID    int64     `json:"send_id"`
-	Status    int       `json:"status"`
+	FromEmail   string    `json:"from_email"`
+	FromID      int64     `json:"from_id"`
+	SendEmail   string    `json:"send_email"`
+	Msg         string    `json:"msg"`
+	Time        time.Time `json:"time"`
+	SendName    string    `json:"send_name"`
+	SendID      int64     `json:"send_id"`
+	Status      int       `json:"status"`
+	SendPicture string    `json:"send_pictures"`
 }
 
 type ListAppResponse struct {

@@ -38,6 +38,7 @@ func Setup() *gin.Engine {
 			userGroup.POST("/heartbeat", userController.Heartbeat)
 			userGroup.PUT("/update/pwd", userController.ReUpdate)
 			userGroup.PUT("/update/email", userController.ReEmail)
+			userGroup.POST("/show/main", userController.LookUserMain)
 			userGroup.POST("/create", userController.CreateUserMain)
 			userGroup.DELETE("/deleteUser", userController.DelUser)
 		}

@@ -42,7 +42,7 @@ func (AppliController) SearchAppli(c *gin.Context) {
 	res, err := applicate.SearchAppli(&req)
 	c.JSON(200, models.FindEnd{
 		Err:  err,
-		Find: &res,
+		Find: res,
 	})
 }
 

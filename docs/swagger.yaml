@@ -38,6 +38,8 @@ definitions:
         type: integer
       send_name:
         type: string
+      send_pictures:
+        type: string
       status:
         type: integer
       time:
@@ -80,10 +82,7 @@ definitions:
         type: string
       name:
         type: string
-    type: object
-  models.FindPerson:
-    properties:
-      email:
+      pictures:
         type: string
     type: object
   models.HistoryMsg:
@@ -203,12 +202,17 @@ definitions:
         type: integer
       name:
         type: string
+      picture:
+        type: string
       signature:
         type: string
-    required:
-    - gender
-    - name
-    - signature
+    type: object
+  models.UserMainReturn:
+    properties:
+      err:
+        type: string
+      user:
+        $ref: '#/definitions/models.UserMain'
     type: object
 info:
   contact: {}
@@ -321,15 +325,11 @@ paths:
       - application
   /application/search:
     get:
-      consumes:
-      - application/json
       parameters:
-      - description: 申请请求
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/models.FindPerson'
+      - description: 按用户名模糊搜索
+        in: query
+        name: username
+        type: string
       produces:
       - application/json
       responses:
@@ -530,6 +530,22 @@ paths:
           schema:
             type: string
       summary: 用户注册
+      tags:
+      - user
+  /user/show/main:
+    post:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.UserMainReturn'
+      security:
+      - BearerAuth: []
+      summary: 显示当前用户资料
       tags:
       - user
   /user/update/email:

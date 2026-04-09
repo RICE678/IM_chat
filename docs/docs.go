@@ -192,9 +192,6 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "consumes": [
-                    "application/json"
-                ],
                 "produces": [
                     "application/json"
                 ],
@@ -204,13 +201,10 @@ const docTemplate = `{
                 "summary": "查看待添加好友",
                 "parameters": [
                     {
-                        "description": "申请请求",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.FindPerson"
-                        }
+                        "type": "string",
+                        "description": "按用户名模糊搜索",
+                        "name": "username",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -534,6 +528,33 @@ const docTemplate = `{
                 }
             }
         },
+        "/user/show/main": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "显示当前用户资料",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.UserMainReturn"
+                        }
+                    }
+                }
+            }
+        },
         "/user/update/email": {
             "put": {
                 "security": [
@@ -670,6 +691,9 @@ const docTemplate = `{
                 "send_name": {
                     "type": "string"
                 },
+                "send_pictures": {
+                    "type": "string"
+                },
                 "status": {
                     "type": "integer"
                 },
@@ -733,13 +757,8 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string"
-                }
-            }
-        },
-        "models.FindPerson": {
-            "type": "object",
-            "properties": {
-                "email": {
+                },
+                "pictures": {
                     "type": "string"
                 }
             }
@@ -913,11 +932,6 @@ const docTemplate = `{
         },
         "models.UserMain": {
             "type": "object",
-            "required": [
-                "gender",
-                "name",
-                "signature"
-            ],
             "properties": {
                 "gender": {
                     "description": "0为男 1为女 2为未知",
@@ -926,8 +940,22 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
+                "picture": {
+                    "type": "string"
+                },
                 "signature": {
                     "type": "string"
+                }
+            }
+        },
+        "models.UserMainReturn": {
+            "type": "object",
+            "properties": {
+                "err": {
+                    "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/models.UserMain"
                 }
             }
         }

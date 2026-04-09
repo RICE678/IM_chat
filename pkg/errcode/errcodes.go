@@ -24,6 +24,8 @@ const (
 	NoSend              = 3004
 	NotAddMy            = 3005
 	ErrorForList        = 4001
+	ErrForKafka         = 5001
+	KafTimeOut          = 5002
 )
 
 var codeMsg = map[int]string{
@@ -51,6 +53,8 @@ var codeMsg = map[int]string{
 	DontSendCode:        "发送验证码失败",
 
 	ErrorForList: "读取用户列表失败",
+	ErrForKafka:  "kafka代理未配置",
+	KafTimeOut:   "kafka超时发送",
 }
 
 func Msg(code int) string {

@@ -8,7 +8,7 @@ import (
 	"strconv"
 )
 
-func SearchAppli(user *models.FindPerson) (find models.FindMiddle, err1 string) {
+func SearchAppli(user *models.FindPerson) (find *models.FindMiddle, err1 string) {
 	var err error
 	if user.SendID, err = sql.SearchID(user.SendEmail); err != nil || user.UserID <= 0 {
 		err1 = errcode.Msg(errcode.NoPerson)
@@ -18,9 +18,12 @@ func SearchAppli(user *models.FindPerson) (find models.FindMiddle, err1 string) 
 		err1 = errcode.Msg(errcode.NotAddMy)
 		return
 	}
-	find.SendEmail = user.SendEmail
-	find.SendID = user.UserID
-	find.SendName, _ = sql.SearchName(user.UserID)
+	find = &models.FindMiddle{
+		SendEmail: user.SendEmail,
+		SendID:    user.SendID,
+	}
+	find.SendName, _ = sql.SearchName(user.SendID)
+	find.SendPictures, _ = sql.SearchPicture(user.SendID)
 	err1 = errcode.Msg(errcode.SUCCESS)
 	return
 }
@@ -57,15 +60,17 @@ func ListApp(userID int64) ([]models.Apply, string) {
 		email_from, _ := sql.SearchEmail(r.FromID)
 		email, _ := sql.SearchEmail(r.ToID)
 		name, _ := sql.SearchName(r.ToID)
+		picture, _ := sql.SearchPicture(r.ToID)
 		list = append(list, models.Apply{
-			FromID:    userID,
-			SendID:    r.ToID,
-			FromEmail: email_from,
-			SendEmail: email,
-			SendName:  name,
-			Msg:       r.Remark,
-			Time:      r.CreateTime,
-			Status:    r.Status,
+			FromID:      userID,
+			SendID:      r.ToID,
+			FromEmail:   email_from,
+			SendEmail:   email,
+			SendName:    name,
+			Msg:         r.Remark,
+			Time:        r.CreateTime,
+			Status:      r.Status,
+			SendPicture: picture,
 		})
 	}
 
@@ -87,14 +92,16 @@ func ListApp(userID int64) ([]models.Apply, string) {
 			email, _ := sql.SearchEmail(row.ToID)
 			name, _ := sql.SearchName(row.ToID)
 			email_from, _ := sql.SearchEmail(row.FromID)
+			picture, _ := sql.SearchPicture(row.ToID)
 			list = append(list, models.Apply{
-				SendID:    row.ToID,
-				SendEmail: email,
-				SendName:  name,
-				FromEmail: email_from,
-				Msg:       row.Remark,
-				Time:      row.CreateTime,
-				Status:    row.Status,
+				SendID:      row.ToID,
+				SendEmail:   email,
+				SendName:    name,
+				FromEmail:   email_from,
+				Msg:         row.Remark,
+				Time:        row.CreateTime,
+				Status:      row.Status,
+				SendPicture: picture,
 			})
 		}
 	}
@@ -106,9 +113,6 @@ func RefuseFriend(friend *models.RefuseFriend) string {
 	if friend.AppliID, err = redisdao.GetApplyPair(friend.UserID, friend.Account_id); err != nil {
 		return errcode.Msg(errcode.ERROR)
 	}
-	//if friend.AppliID <= 0 {
-	//	return errcode.Msg(errcode.SUCCESS)
-	//}
 	if err = sql.ChangeStatusByPair(friend.AppliID, friend.Account_id, friend.UserID, 2); err != nil {
 		return errcode.Msg(errcode.ERROR)
 	}
@@ -161,15 +165,17 @@ func ShowList(userID int64) ([]models.Apply, string) {
 		idSet[r.ID] = struct{}{}
 		email_from, _ := sql.SearchEmail(r.FromID)
 		name, _ := sql.SearchName(r.FromID)
+		picture, _ := sql.SearchPicture(r.FromID)
 		list = append(list, models.Apply{
-			FromID:    r.FromID,
-			FromEmail: email_from,
-			SendID:    r.FromID,
-			SendEmail: email_from,
-			SendName:  name,
-			Msg:       r.Remark,
-			Time:      r.CreateTime,
-			Status:    r.Status,
+			FromID:      r.FromID,
+			FromEmail:   email_from,
+			SendID:      r.FromID,
+			SendEmail:   email_from,
+			SendName:    name,
+			Msg:         r.Remark,
+			Time:        r.CreateTime,
+			Status:      r.Status,
+			SendPicture: picture,
 		})
 	}
 
@@ -186,15 +192,17 @@ func ShowList(userID int64) ([]models.Apply, string) {
 			idSet[id] = struct{}{}
 			name, _ := sql.SearchName(row.FromID)
 			email_from, _ := sql.SearchEmail(row.FromID)
+			picture, _ := sql.SearchPicture(row.FromID)
 			list = append(list, models.Apply{
-				FromID:    row.FromID,
-				SendID:    row.FromID,
-				SendEmail: email_from,
-				SendName:  name,
-				Msg:       row.Remark,
-				FromEmail: email_from,
-				Time:      row.CreateTime,
-				Status:    row.Status,
+				FromID:      row.FromID,
+				SendID:      row.FromID,
+				SendEmail:   email_from,
+				SendName:    name,
+				Msg:         row.Remark,
+				FromEmail:   email_from,
+				Time:        row.CreateTime,
+				Status:      row.Status,
+				SendPicture: picture,
 			})
 		}
 	}

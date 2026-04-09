@@ -144,6 +144,33 @@ func (UserController) CreateUserMain(c *gin.Context) {
 	c.JSON(200, res)
 }
 
+// LookUserMain godoc
+// @Summary 显示当前用户资料
+// @Tags user
+// @Accept json
+// @Produce json
+// @Success 200 {object} models.UserMainReturn
+// @Security BearerAuth
+// @Router /user/show/main [post]
+func (UserController) LookUserMain(c *gin.Context) {
+	userIDVal, ok := c.Get(middlewares.CtxUserIDKey)
+	if !ok {
+		c.JSON(401, errcode.Msg(errcode.CodeNeedLogin))
+		return
+	}
+	userID, ok := userIDVal.(int64)
+	if !ok {
+		c.JSON(401, errcode.Msg(errcode.CodeInvalidToken))
+		return
+	}
+	res, err := user2.SearchAccountDetails(userID)
+	c.JSON(200, &models.UserMainReturn{
+		User: res,
+		Err:  err,
+	})
+
+}
+
 // Heartbeat godoc
 // @Summary 心跳续期
 // @Tags user

@@ -4,6 +4,7 @@ import (
 	"IM_chat/pkg/mysql"
 	"IM_chat/pkg/snowflake"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -14,6 +15,7 @@ type User struct {
 	Email      string    `db:"email"`
 	Gender     int       `db:"gender"`
 	Signature  string    `db:"signature"`
+	Picture    int       `db:"picture"`
 	CreateTime time.Time `db:"create_time"`
 }
 
@@ -103,10 +105,32 @@ func ReSetPassword(id int64, password string) error {
 	return nil
 }
 
-func UpdateUserMain(userid int64, name string, gender int, signature string) error {
+func UpdateUserMain(userid int64, name string, gender int, signature string, picture string) error {
+	var current User
+	if err := mysql.DB().Get(&current, "select username, gender, signature, picture from users where id=?", userid); err != nil {
+		return err
+	}
+	finalName := name
+	if strings.TrimSpace(finalName) == "" {
+		finalName = current.Name
+	}
+	finalSignature := signature
+	if strings.TrimSpace(finalSignature) == "" {
+		finalSignature = current.Signature
+	}
+	finalGender := gender
+	if finalGender < 0 || finalGender > 2 {
+		finalGender = current.Gender
+	}
+	finalPicture := current.Picture
+	if strings.TrimSpace(picture) != "" {
+		if err := mysql.DB().Get(&finalPicture, "select id from picture where web=?", picture); err != nil {
+			return err
+		}
+	}
 	_, err := mysql.DB().Exec(
-		"update users set username=IF(?='', username, ?), gender=?, signature=? where id=?",
-		name, name, gender, signature, userid,
+		"update users set username=?, gender=?, signature=? ,picture=? where id=?",
+		finalName, finalGender, finalSignature, finalPicture, userid,
 	)
 	if err != nil {
 		return err
@@ -114,10 +138,28 @@ func UpdateUserMain(userid int64, name string, gender int, signature string) err
 	return nil
 }
 
+func SearchUserMain(userID int64) (u User, err error) {
+	err = mysql.DB().Get(&u, "select username,email, gender, signature, picture from users where id=?", userID)
+	return
+}
 func DeleteUser(id int64) error {
 	_, err := mysql.DB().Exec("update users set id_del=? where id=?", 1, id)
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+func SearchPicture(id int64) (string, error) {
+	var picid int
+	var picture string
+	err := mysql.DB().Get(&picid, "select picture from users where id=?", id)
+	if err != nil {
+		return "", err
+	}
+	err = mysql.DB().Get(&picture, "select web from picture where id=?", picid)
+	if err != nil {
+		return "", err
+	}
+	return picture, nil
 }

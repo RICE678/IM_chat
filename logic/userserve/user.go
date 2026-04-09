@@ -112,10 +112,25 @@ func ReEmail(user *models.ReEmail) string {
 }
 
 func CreateAccountDetails(user *models.UserMain) string {
-	if err := sql.UpdateUserMain(user.UserID, user.Name, user.Gender, user.Signature); err != nil {
+	if err := sql.UpdateUserMain(user.UserID, user.Name, user.Gender, user.Signature, user.Picture); err != nil {
 		return fmt.Sprintf("服务器出错: %v", err)
 	}
 	return errcode.Msg(errcode.SUCCESS)
+}
+func SearchAccountDetails(userID int64) (u models.UserMain, err string) {
+	user, err2 := sql.SearchUserMain(userID)
+	u.Picture, err2 = sql.SearchPicture(userID)
+	if err2 != nil {
+		err = errcode.Msg(errcode.ERROR)
+		return
+	}
+	u.Email = user.Email
+	u.UserID = userID
+	u.Name = user.Name
+	u.Gender = user.Gender
+	u.Signature = user.Signature
+	err = errcode.Msg(errcode.SUCCESS)
+	return
 }
 
 func DelUserDetail(userID int64) string {
