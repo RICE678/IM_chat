@@ -12,7 +12,6 @@ import (
 	"net/http"
 )
 
-// Setup 初始化路由，挂载所有接口
 func Setup() *gin.Engine {
 	r := gin.New()
 	emailController := email.NewEmailController()
@@ -40,6 +39,7 @@ func Setup() *gin.Engine {
 			userGroup.PUT("/update/email", userController.ReEmail)
 			userGroup.POST("/show/main", userController.LookUserMain)
 			userGroup.POST("/create", userController.CreateUserMain)
+			userGroup.POST("/show/pictures", userController.ShowPictures)
 			userGroup.DELETE("/deleteUser", userController.DelUser)
 		}
 	}
@@ -47,7 +47,8 @@ func Setup() *gin.Engine {
 	{
 		applicationGroup.Use(middlewares.JWTAuthMiddleware())
 		{
-			applicationGroup.GET("/search", applyController.SearchAppli)
+			applicationGroup.GET("/search/email", applyController.SearchAppli)
+			applicationGroup.POST("/search/name", applyController.SearchNameAppli)
 			applicationGroup.POST("/create", applyController.CreateAppli)
 			applicationGroup.GET("/mylist", applyController.ListMyAppli)
 			applicationGroup.PUT("/refuse", applyController.RefuseAppli)

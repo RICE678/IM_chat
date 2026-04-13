@@ -6,11 +6,9 @@ import (
 	"github.com/spf13/viper"
 )
 
-func InitSettings() (err error) {
-	viper.SetConfigName("config")
+func InitSettings(configPath string) (err error) {
+	viper.SetConfigFile(configPath)
 	viper.SetConfigType("yaml")
-	viper.AddConfigPath("./config")
-	viper.AddConfigPath(".")
 	err = viper.ReadInConfig()
 	if err != nil {
 		fmt.Printf("viper.ReadInConfig() failed,err:%v\n", err)

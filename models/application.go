@@ -28,6 +28,24 @@ type FindEnd struct {
 	Err  string      `json:"error"`
 }
 
+type FindNamePerson struct {
+	SendName  string `json:"name" form:"name" binding:"required"`
+	UserID    int64  `json:"-"`
+	SendID    int64  `json:"-"`
+	SendEmail string `json:"-"`
+}
+type FindNameMiddle struct {
+	SendEmail    string `json:"email"`
+	SendName     string `json:"name"`
+	SendID       int64  `json:"ID"`
+	SendPictures string `json:"pictures"`
+}
+
+type FindNameEnd struct {
+	Find []FindNameMiddle `json:"find,omitempty"`
+	Err  string           `json:"error"`
+}
+
 type Apply struct {
 	FromEmail   string    `json:"from_email"`
 	FromID      int64     `json:"from_id"`

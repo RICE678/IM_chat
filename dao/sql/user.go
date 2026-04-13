@@ -1,12 +1,19 @@
 package sql
 
 import (
+	"IM_chat/models"
 	"IM_chat/pkg/mysql"
 	"IM_chat/pkg/snowflake"
+	"database/sql"
+	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
 )
+
+// defaultPictureID 系统默认头像（picture 表主键）；库里正常应始终存 1，COALESCE 仅兼容极少数 NULL 旧数据。
+const defaultPictureID = 1
 
 type User struct {
 	ID         int64     `db:"id"`
@@ -37,7 +44,7 @@ func AddRegister(email, password string) error {
 		suffix = idString[len(idString)-6:]
 	}
 	name := "用户" + suffix
-	_, err := mysql.DB().Exec("insert into users(id,username,password,email)values(?,?,?,?)", id, name, password, email)
+	_, err := mysql.DB().Exec("insert into users(id,username,password,email,picture)values(?,?,?,?,?)", id, name, password, email, defaultPictureID)
 	if err != nil {
 		return err
 	}
@@ -104,42 +111,48 @@ func ReSetPassword(id int64, password string) error {
 	}
 	return nil
 }
-
-func UpdateUserMain(userid int64, name string, gender int, signature string, picture string) error {
+func UpdateUserMain(userid int64, name string, gender *int, signature *string, pictureID *int) error {
 	var current User
-	if err := mysql.DB().Get(&current, "select username, gender, signature, picture from users where id=?", userid); err != nil {
+	if err := mysql.DB().Get(&current, "select username, gender, COALESCE(signature, '') as signature, COALESCE(picture, ?) as picture from users where id=?", defaultPictureID, userid); err != nil {
 		return err
 	}
-	finalName := name
-	if strings.TrimSpace(finalName) == "" {
-		finalName = current.Name
+	finalName := current.Name
+	if strings.TrimSpace(name) != "" {
+		finalName = strings.TrimSpace(name)
 	}
-	finalSignature := signature
-	if strings.TrimSpace(finalSignature) == "" {
-		finalSignature = current.Signature
+	finalGender := current.Gender
+	if gender != nil && *gender >= 0 && *gender <= 2 {
+		finalGender = *gender
 	}
-	finalGender := gender
-	if finalGender < 0 || finalGender > 2 {
-		finalGender = current.Gender
+	finalSignature := current.Signature
+	if signature != nil {
+		finalSignature = *signature
 	}
-	finalPicture := current.Picture
-	if strings.TrimSpace(picture) != "" {
-		if err := mysql.DB().Get(&finalPicture, "select id from picture where web=?", picture); err != nil {
-			return err
+	finalPicID := current.Picture
+	if pictureID != nil {
+		pid := *pictureID
+		if pid < 1 {
+			finalPicID = defaultPictureID
+		} else {
+			var found int
+			if err := mysql.DB().Get(&found, "select id from picture where id=?", pid); err != nil {
+				if errors.Is(err, sql.ErrNoRows) {
+					return fmt.Errorf("invalid picture_id: %d", pid)
+				}
+				return err
+			}
+			finalPicID = found
 		}
 	}
 	_, err := mysql.DB().Exec(
 		"update users set username=?, gender=?, signature=? ,picture=? where id=?",
-		finalName, finalGender, finalSignature, finalPicture, userid,
+		finalName, finalGender, finalSignature, finalPicID, userid,
 	)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 func SearchUserMain(userID int64) (u User, err error) {
-	err = mysql.DB().Get(&u, "select username,email, gender, signature, picture from users where id=?", userID)
+	err = mysql.DB().Get(&u, "select username,email, gender, COALESCE(signature, '') as signature, COALESCE(picture, ?) as picture from users where id=?", defaultPictureID, userID)
 	return
 }
 func DeleteUser(id int64) error {
@@ -152,14 +165,32 @@ func DeleteUser(id int64) error {
 
 func SearchPicture(id int64) (string, error) {
 	var picid int
-	var picture string
-	err := mysql.DB().Get(&picid, "select picture from users where id=?", id)
+	err := mysql.DB().Get(&picid, "select COALESCE(picture, ?) from users where id=?", defaultPictureID, id)
 	if err != nil {
 		return "", err
 	}
-	err = mysql.DB().Get(&picture, "select web from picture where id=?", picid)
+	var picture string
+	err = mysql.DB().Get(&picture, "SELECT web FROM picture WHERE id = ?", picid)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return "", nil
+		}
 		return "", err
 	}
 	return picture, nil
+}
+
+func SearchPictureID(id int64) (int, error) {
+	var picid int
+	err := mysql.DB().Get(&picid, "select COALESCE(picture, ?) from users where id=?", defaultPictureID, id)
+	if err != nil {
+		return 0, err
+	}
+	return picid, nil
+}
+
+func ShowPicture() ([]models.Pictures, error) {
+	var pictures []models.Pictures
+	err := mysql.DB().Select(&pictures, "SELECT id, web FROM picture ORDER BY id ASC")
+	return pictures, err
 }

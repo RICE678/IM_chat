@@ -85,6 +85,33 @@ definitions:
       pictures:
         type: string
     type: object
+  models.FindNameEnd:
+    properties:
+      error:
+        type: string
+      find:
+        items:
+          $ref: '#/definitions/models.FindNameMiddle'
+        type: array
+    type: object
+  models.FindNameMiddle:
+    properties:
+      ID:
+        type: integer
+      email:
+        type: string
+      name:
+        type: string
+      pictures:
+        type: string
+    type: object
+  models.FindNamePerson:
+    properties:
+      name:
+        type: string
+    required:
+    - name
+    type: object
   models.HistoryMsg:
     properties:
       msg:
@@ -145,6 +172,22 @@ definitions:
       unread:
         type: integer
     type: object
+  models.PictureMainReturn:
+    properties:
+      err:
+        type: string
+      picture:
+        items:
+          $ref: '#/definitions/models.Pictures'
+        type: array
+    type: object
+  models.Pictures:
+    properties:
+      id:
+        type: integer
+      web:
+        type: string
+    type: object
   models.ReEmail:
     properties:
       code:
@@ -197,6 +240,8 @@ definitions:
     type: object
   models.UserMain:
     properties:
+      email:
+        type: string
       gender:
         description: 0为男 1为女 2为未知
         type: integer
@@ -204,6 +249,20 @@ definitions:
         type: string
       picture:
         type: string
+      picture_id:
+        type: integer
+      signature:
+        type: string
+    type: object
+  models.UserMain2:
+    properties:
+      gender:
+        description: 0男 1女 2未知
+        type: integer
+      name:
+        type: string
+      picture_id:
+        type: integer
       signature:
         type: string
     type: object
@@ -218,7 +277,7 @@ info:
   contact: {}
   description: IM Chat backend API documentation.
   title: IM Chat API
-  version: "1.0"
+  version: "2.0"
 paths:
   /application/accept:
     put:
@@ -323,10 +382,10 @@ paths:
       summary: 拒绝好友申请
       tags:
       - application
-  /application/search:
+  /application/search/email:
     get:
       parameters:
-      - description: 按用户名模糊搜索
+      - description: 按邮箱搜索
         in: query
         name: username
         type: string
@@ -342,10 +401,47 @@ paths:
       summary: 查看待添加好友
       tags:
       - application
+  /application/search/name:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 按名字模糊搜索
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.FindNamePerson'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.FindNameEnd'
+      security:
+      - BearerAuth: []
+      summary: 搜索名字查看待添加好友
+      tags:
+      - application
   /chat/history:
     get:
       consumes:
       - application/json
+      parameters:
+      - description: 对方用户 ID
+        in: query
+        name: receiver_id
+        required: true
+        type: integer
+      - description: 页码，默认 1
+        in: query
+        name: page
+        type: integer
+      - description: 每页条数，默认 20，最大 100
+        in: query
+        name: size
+        type: integer
       produces:
       - application/json
       responses:
@@ -424,12 +520,13 @@ paths:
       consumes:
       - application/json
       parameters:
-      - description: 完善资料请求
+      - description: 完善资料：name 空则保留原名；gender/signature/picture_id 省略则不改；signature
+          可传空串清空；picture_id 为图片库 id（≥1），<1 时按默认头像 id=1 保存
         in: body
         name: request
         required: true
         schema:
-          $ref: '#/definitions/models.UserMain'
+          $ref: '#/definitions/models.UserMain2'
       produces:
       - application/json
       responses:
@@ -546,6 +643,27 @@ paths:
       security:
       - BearerAuth: []
       summary: 显示当前用户资料
+      tags:
+      - user
+  /user/show/pictures:
+    post:
+      consumes:
+      - application/json
+      description: 返回 picture 表全部 id、web（需登录，无请求体）
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.PictureMainReturn'
+        "401":
+          description: 未登录或 token 无效
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: 展示图片库
       tags:
       - user
   /user/update/email:

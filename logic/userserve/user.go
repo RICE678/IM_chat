@@ -111,19 +111,24 @@ func ReEmail(user *models.ReEmail) string {
 	return errcode.Msg(errcode.SUCCESS)
 }
 
-func CreateAccountDetails(user *models.UserMain) string {
-	if err := sql.UpdateUserMain(user.UserID, user.Name, user.Gender, user.Signature, user.Picture); err != nil {
+func CreateAccountDetails(user *models.UserMain2) string {
+	if err := sql.UpdateUserMain(user.UserID, user.Name, user.Gender, user.Signature, user.PictureID); err != nil {
 		return fmt.Sprintf("服务器出错: %v", err)
 	}
 	return errcode.Msg(errcode.SUCCESS)
 }
 func SearchAccountDetails(userID int64) (u models.UserMain, err string) {
 	user, err2 := sql.SearchUserMain(userID)
+	if err2 != nil {
+		err = errcode.Msg(errcode.ERROR)
+		return
+	}
 	u.Picture, err2 = sql.SearchPicture(userID)
 	if err2 != nil {
 		err = errcode.Msg(errcode.ERROR)
 		return
 	}
+	u.PictureID, _ = sql.SearchPictureID(userID)
 	u.Email = user.Email
 	u.UserID = userID
 	u.Name = user.Name
@@ -162,4 +167,14 @@ func ReCodeSend(userID int64) string {
 	redis.RDB.Set(context.Background(), "email:"+email, code, time.Minute*30)
 	redis.RDB.Set(context.Background(), "send-email:"+email, code, time.Minute*1)
 	return errcode.Msg(errcode.SUCCESS)
+}
+
+func SearchPictures() (ps []models.Pictures, err string) {
+	var err2 error
+	ps, err2 = sql.ShowPicture()
+	if err2 != nil {
+		err = errcode.Msg(errcode.ERROR)
+		return
+	}
+	return
 }

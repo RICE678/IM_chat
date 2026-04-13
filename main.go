@@ -13,8 +13,6 @@ import (
 	"IM_chat/settings"
 	"context"
 	"fmt"
-	"github.com/spf13/viper"
-	"go.uber.org/zap"
 	"log"
 	"net/http"
 	"os"
@@ -22,6 +20,9 @@ import (
 	"path/filepath"
 	"syscall"
 	"time"
+
+	"github.com/spf13/viper"
+	"go.uber.org/zap"
 )
 
 // @title IM Chat API
@@ -39,7 +40,7 @@ func findConfigPath() string {
 		filepath.Join("..", "config", "config.yaml"),
 	}
 	for _, path := range possiblePaths {
-		if _, err := os.Stat(path); err != nil {
+		if _, err := os.Stat(path); err == nil {
 			return path
 		}
 	}
@@ -52,7 +53,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Fail to load config file: %v", err)
 	}
-	if err := settings.InitSettings(); err != nil {
+	if err := settings.InitSettings(cfgPath); err != nil {
 		fmt.Printf("init settings failed,err:%v\n", err)
 		return
 	}
@@ -70,8 +71,8 @@ func main() {
 		return
 	}
 	kafka.InitKafka(&cfg.Kafka)
-	if err := kafka.InitProducer(&cfg.Kafka); err != errcode.Msg(errcode.SUCCESS) {
-		fmt.Printf("init kafka failed,err:%v\n", err)
+	if initMsg := kafka.InitProducer(&cfg.Kafka); initMsg != errcode.Msg(errcode.SUCCESS) {
+		fmt.Printf("init kafka failed, msg:%s\n", initMsg)
 	}
 	if err := snowflake.Init(viper.GetString("app.start_time"), viper.GetInt64("app.machine_id")); err != nil {
 		fmt.Printf("init snowflake failed,err:%v\n", err)

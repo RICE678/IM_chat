@@ -9,7 +9,9 @@ import (
 )
 
 func LoginRedis(user *models.LoginServer) error {
-	redis.RDB.Del(context.Background(), "login:"+user.Email)
+	if err := redis.RDB.Del(context.Background(), "login:"+user.Email).Err(); err != nil {
+		return err
+	}
 	if err := redis.RDB.Set(context.Background(), "login:"+user.Email, user.Password, time.Hour*48).Err(); err != nil {
 		return err
 	}
@@ -20,7 +22,9 @@ func LoginRedis(user *models.LoginServer) error {
 }
 
 func ReLoginRedis(user *models.ReUpdate) error {
-	redis.RDB.Del(context.Background(), "login:"+user.Email)
+	if err := redis.RDB.Del(context.Background(), "login:"+user.Email).Err(); err != nil {
+		return err
+	}
 	if err := redis.RDB.Set(context.Background(), "login:"+user.Email, user.NewPassword, time.Hour*48).Err(); err != nil {
 		return err
 	}
@@ -30,7 +34,9 @@ func ReLoginRedis(user *models.ReUpdate) error {
 	return nil
 }
 func ReEmailRedis(user *models.ReEmail) error {
-	redis.RDB.Del(context.Background(), "login:"+user.Email)
+	if err := redis.RDB.Del(context.Background(), "login:"+user.Email).Err(); err != nil {
+		return err
+	}
 	if err := redis.RDB.Set(context.Background(), "login:"+user.NewEmail, user.Password, time.Hour*48).Err(); err != nil {
 		return err
 	}

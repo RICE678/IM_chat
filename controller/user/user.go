@@ -119,7 +119,7 @@ func (uc UserController) ReEmail(c *gin.Context) {
 // @Tags user
 // @Accept json
 // @Produce json
-// @Param request body models.UserMain true "完善资料请求"
+// @Param request body models.UserMain2 true "完善资料：name 空则保留原名；gender/signature/picture_id 省略则不改；signature 可传空串清空；picture_id 为图片库 id（≥1），<1 时按默认头像 id=1 保存"
 // @Success 200 {string} string
 // @Security BearerAuth
 // @Router /user/create [post]
@@ -134,7 +134,7 @@ func (UserController) CreateUserMain(c *gin.Context) {
 		c.JSON(401, errcode.Msg(errcode.CodeInvalidToken))
 		return
 	}
-	var req models.UserMain
+	var req models.UserMain2
 	if err := c.ShouldBind(&req); err != nil {
 		c.JSON(200, "ParamErr: "+err.Error())
 		return
@@ -142,6 +142,30 @@ func (UserController) CreateUserMain(c *gin.Context) {
 	req.UserID = userID
 	res := user2.CreateAccountDetails(&req)
 	c.JSON(200, res)
+}
+
+// ShowPictures godoc
+// @Summary 展示图片库
+// @Description 返回 picture 表全部 id、web（需登录，无请求体）
+// @Tags user
+// @Accept json
+// @Produce json
+// @Success 200 {object} models.PictureMainReturn
+// @Failure 401 {string} string "未登录或 token 无效"
+// @Security BearerAuth
+// @Router /user/show/pictures [post]
+func (UserController) ShowPictures(c *gin.Context) {
+	_, ok := c.Get(middlewares.CtxUserIDKey)
+	if !ok {
+		c.JSON(401, errcode.Msg(errcode.CodeNeedLogin))
+		return
+	}
+	res, err := user2.SearchPictures()
+	c.JSON(200, models.PictureMainReturn{
+		User: res,
+		Err:  err,
+	})
+	return
 }
 
 // LookUserMain godoc

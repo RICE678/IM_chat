@@ -185,7 +185,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/application/search": {
+        "/application/search/email": {
             "get": {
                 "security": [
                     {
@@ -202,7 +202,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "按用户名模糊搜索",
+                        "description": "按邮箱搜索",
                         "name": "username",
                         "in": "query"
                     }
@@ -212,6 +212,44 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/models.FindEnd"
+                        }
+                    }
+                }
+            }
+        },
+        "/application/search/name": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "application"
+                ],
+                "summary": "搜索名字查看待添加好友",
+                "parameters": [
+                    {
+                        "description": "按名字模糊搜索",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.FindNamePerson"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.FindNameEnd"
                         }
                     }
                 }
@@ -234,6 +272,27 @@ const docTemplate = `{
                     "chat"
                 ],
                 "summary": "查看历史聊天记录",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "对方用户 ID",
+                        "name": "receiver_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "页码，默认 1",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "每页条数，默认 20，最大 100",
+                        "name": "size",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -362,12 +421,12 @@ const docTemplate = `{
                 "summary": "完善用户资料",
                 "parameters": [
                     {
-                        "description": "完善资料请求",
+                        "description": "完善资料：name 空则保留原名；gender/signature/picture_id 省略则不改；signature 可传空串清空；picture_id 为图片库 id（≥1），\u003c1 时按默认头像 id=1 保存",
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.UserMain"
+                            "$ref": "#/definitions/models.UserMain2"
                         }
                     }
                 ],
@@ -550,6 +609,40 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/models.UserMainReturn"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/show/pictures": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "返回 picture 表全部 id、web（需登录，无请求体）",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "展示图片库",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.PictureMainReturn"
+                        }
+                    },
+                    "401": {
+                        "description": "未登录或 token 无效",
+                        "schema": {
+                            "type": "string"
                         }
                     }
                 }
@@ -763,6 +856,48 @@ const docTemplate = `{
                 }
             }
         },
+        "models.FindNameEnd": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "find": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.FindNameMiddle"
+                    }
+                }
+            }
+        },
+        "models.FindNameMiddle": {
+            "type": "object",
+            "properties": {
+                "ID": {
+                    "type": "integer"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "pictures": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.FindNamePerson": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "models.HistoryMsg": {
             "type": "object",
             "required": [
@@ -855,6 +990,31 @@ const docTemplate = `{
                 }
             }
         },
+        "models.PictureMainReturn": {
+            "type": "object",
+            "properties": {
+                "err": {
+                    "type": "string"
+                },
+                "picture": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Pictures"
+                    }
+                }
+            }
+        },
+        "models.Pictures": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "web": {
+                    "type": "string"
+                }
+            }
+        },
         "models.ReEmail": {
             "type": "object",
             "required": [
@@ -933,6 +1093,9 @@ const docTemplate = `{
         "models.UserMain": {
             "type": "object",
             "properties": {
+                "email": {
+                    "type": "string"
+                },
                 "gender": {
                     "description": "0为男 1为女 2为未知",
                     "type": "integer"
@@ -942,6 +1105,27 @@ const docTemplate = `{
                 },
                 "picture": {
                     "type": "string"
+                },
+                "picture_id": {
+                    "type": "integer"
+                },
+                "signature": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.UserMain2": {
+            "type": "object",
+            "properties": {
+                "gender": {
+                    "description": "0男 1女 2未知",
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "picture_id": {
+                    "type": "integer"
                 },
                 "signature": {
                     "type": "string"
@@ -971,7 +1155,7 @@ const docTemplate = `{
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "1.0",
+	Version:          "2.0",
 	Host:             "",
 	BasePath:         "/",
 	Schemes:          []string{"http"},

@@ -18,10 +18,10 @@ func NewAppliController() *AppliController {
 // @Summary 查看待添加好友
 // @Tags application
 // @Produce json
-// @Param username query string false "按用户名模糊搜索"
+// @Param username query string false "按邮箱搜索"
 // @Success 200 {object} models.FindEnd
 // @Security BearerAuth
-// @Router /application/search [get]
+// @Router /application/search/email [get]
 func (AppliController) SearchAppli(c *gin.Context) {
 	userIDVal, ok := c.Get(middlewares.CtxUserIDKey)
 	if !ok {
@@ -41,6 +41,39 @@ func (AppliController) SearchAppli(c *gin.Context) {
 	}
 	res, err := applicate.SearchAppli(&req)
 	c.JSON(200, models.FindEnd{
+		Err:  err,
+		Find: res,
+	})
+}
+
+// SearchNameAppli godoc
+// @Summary 搜索名字查看待添加好友
+// @Tags application
+// @Accept json
+// @Produce json
+// @Param request body models.FindNamePerson true "按名字模糊搜索"
+// @Success 200 {object} models.FindNameEnd
+// @Security BearerAuth
+// @Router /application/search/name [post]
+func (AppliController) SearchNameAppli(c *gin.Context) {
+	userIDVal, ok := c.Get(middlewares.CtxUserIDKey)
+	if !ok {
+		c.JSON(401, errcode.Msg(errcode.CodeNeedLogin))
+		return
+	}
+	var req models.FindNamePerson
+	req.UserID, ok = userIDVal.(int64)
+	if !ok {
+		c.JSON(401, errcode.Msg(errcode.CodeInvalidToken))
+		return
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(200, "ParamErr")
+		return
+	}
+	res, err := applicate.SearchNameAppli(&req)
+	c.JSON(200, models.FindNameEnd{
 		Err:  err,
 		Find: res,
 	})

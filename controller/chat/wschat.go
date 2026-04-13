@@ -36,6 +36,9 @@ func (cc *ChatController) SendMsg(c *gin.Context) {
 // @Tags chat
 // @Accept json
 // @Produce json
+// @Param receiver_id query int true "对方用户 ID"
+// @Param page query int false "页码，默认 1"
+// @Param size query int false "每页条数，默认 20，最大 100"
 // @Success 200 {object} models.HistoryResponse
 // @Security BearerAuth
 // @Router /chat/history [get]

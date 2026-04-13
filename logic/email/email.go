@@ -48,7 +48,11 @@ func (service *UserSendConfirmEmailService) SendConfirmEmail() string {
 	if err != nil {
 		return errcode.Msg(errcode.DontSendCode)
 	}
-	redis.RDB.Set(context.Background(), "email:"+service.UserEmail, code, time.Minute*30)
-	redis.RDB.Set(context.Background(), "send-email:"+service.UserEmail, code, time.Minute*1)
+	if err := redis.RDB.Set(context.Background(), "email:"+service.UserEmail, code, time.Minute*30).Err(); err != nil {
+		return errcode.Msg(errcode.ERROR)
+	}
+	if err := redis.RDB.Set(context.Background(), "send-email:"+service.UserEmail, code, time.Minute*1).Err(); err != nil {
+		return errcode.Msg(errcode.ERROR)
+	}
 	return errcode.Msg(errcode.SUCCESS)
 }

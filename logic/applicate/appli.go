@@ -8,6 +8,17 @@ import (
 	"strconv"
 )
 
+func userAvatarURL(userID int64) string {
+	if userID <= 0 {
+		return ""
+	}
+	s, err := sql.SearchPicture(userID)
+	if err != nil {
+		return ""
+	}
+	return s
+}
+
 func SearchAppli(user *models.FindPerson) (find *models.FindMiddle, err1 string) {
 	var err error
 	if user.SendID, err = sql.SearchID(user.SendEmail); err != nil || user.UserID <= 0 {
@@ -23,7 +34,26 @@ func SearchAppli(user *models.FindPerson) (find *models.FindMiddle, err1 string)
 		SendID:    user.SendID,
 	}
 	find.SendName, _ = sql.SearchName(user.SendID)
-	find.SendPictures, _ = sql.SearchPicture(user.SendID)
+	find.SendPictures = userAvatarURL(user.SendID)
+	err1 = errcode.Msg(errcode.SUCCESS)
+	return
+}
+
+func SearchNameAppli(user *models.FindNamePerson) (find []models.FindNameMiddle, err1 string) {
+	userDetail, err := sql.SearchNameAppli(user.SendName)
+	if err != nil || userDetail == nil {
+		err1 = errcode.Msg(errcode.NoPerson)
+		return
+	}
+	for i := 0; i < len(userDetail); i++ {
+		pic, _ := sql.SearchPicture(userDetail[i].ID)
+		find = append(find, models.FindNameMiddle{
+			SendEmail:    userDetail[i].Email,
+			SendName:     userDetail[i].Name,
+			SendID:       userDetail[i].ID,
+			SendPictures: pic,
+		})
+	}
 	err1 = errcode.Msg(errcode.SUCCESS)
 	return
 }
@@ -60,7 +90,7 @@ func ListApp(userID int64) ([]models.Apply, string) {
 		email_from, _ := sql.SearchEmail(r.FromID)
 		email, _ := sql.SearchEmail(r.ToID)
 		name, _ := sql.SearchName(r.ToID)
-		picture, _ := sql.SearchPicture(r.ToID)
+		peerPic := userAvatarURL(r.ToID)
 		list = append(list, models.Apply{
 			FromID:      userID,
 			SendID:      r.ToID,
@@ -70,7 +100,7 @@ func ListApp(userID int64) ([]models.Apply, string) {
 			Msg:         r.Remark,
 			Time:        r.CreateTime,
 			Status:      r.Status,
-			SendPicture: picture,
+			SendPicture: peerPic,
 		})
 	}
 
@@ -92,8 +122,9 @@ func ListApp(userID int64) ([]models.Apply, string) {
 			email, _ := sql.SearchEmail(row.ToID)
 			name, _ := sql.SearchName(row.ToID)
 			email_from, _ := sql.SearchEmail(row.FromID)
-			picture, _ := sql.SearchPicture(row.ToID)
+			peerPic := userAvatarURL(row.ToID)
 			list = append(list, models.Apply{
+				FromID:      userID,
 				SendID:      row.ToID,
 				SendEmail:   email,
 				SendName:    name,
@@ -101,7 +132,7 @@ func ListApp(userID int64) ([]models.Apply, string) {
 				Msg:         row.Remark,
 				Time:        row.CreateTime,
 				Status:      row.Status,
-				SendPicture: picture,
+				SendPicture: peerPic,
 			})
 		}
 	}
@@ -165,7 +196,7 @@ func ShowList(userID int64) ([]models.Apply, string) {
 		idSet[r.ID] = struct{}{}
 		email_from, _ := sql.SearchEmail(r.FromID)
 		name, _ := sql.SearchName(r.FromID)
-		picture, _ := sql.SearchPicture(r.FromID)
+		fromPic := userAvatarURL(r.FromID)
 		list = append(list, models.Apply{
 			FromID:      r.FromID,
 			FromEmail:   email_from,
@@ -175,7 +206,7 @@ func ShowList(userID int64) ([]models.Apply, string) {
 			Msg:         r.Remark,
 			Time:        r.CreateTime,
 			Status:      r.Status,
-			SendPicture: picture,
+			SendPicture: fromPic,
 		})
 	}
 
@@ -192,7 +223,7 @@ func ShowList(userID int64) ([]models.Apply, string) {
 			idSet[id] = struct{}{}
 			name, _ := sql.SearchName(row.FromID)
 			email_from, _ := sql.SearchEmail(row.FromID)
-			picture, _ := sql.SearchPicture(row.FromID)
+			fromPic := userAvatarURL(row.FromID)
 			list = append(list, models.Apply{
 				FromID:      row.FromID,
 				SendID:      row.FromID,
@@ -202,7 +233,7 @@ func ShowList(userID int64) ([]models.Apply, string) {
 				FromEmail:   email_from,
 				Time:        row.CreateTime,
 				Status:      row.Status,
-				SendPicture: picture,
+				SendPicture: fromPic,
 			})
 		}
 	}
