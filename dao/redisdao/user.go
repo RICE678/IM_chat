@@ -34,7 +34,7 @@ func ReLoginRedis(user *models.ReUpdate) error {
 	return nil
 }
 func ReEmailRedis(user *models.ReEmail) error {
-	if err := redis.RDB.Del(context.Background(), "login:"+user.Email).Err(); err != nil {
+	if err := redis.RDB.Del(context.Background(), "login:"+user.NewEmail).Err(); err != nil {
 		return err
 	}
 	if err := redis.RDB.Set(context.Background(), "login:"+user.NewEmail, user.Password, time.Hour*48).Err(); err != nil {

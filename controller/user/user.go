@@ -235,6 +235,7 @@ func (uc UserController) DelUser(c *gin.Context) {
 	userID, ok := userIDVal.(int64)
 	if !ok {
 		c.JSON(401, errcode.Msg(errcode.CodeInvalidToken))
+		return
 	}
 	res := user2.DelUserDetail(userID)
 	c.JSON(200, res)

@@ -186,7 +186,7 @@ const docTemplate = `{
             }
         },
         "/application/search/email": {
-            "get": {
+            "post": {
                 "security": [
                     {
                         "BearerAuth": []
@@ -198,13 +198,16 @@ const docTemplate = `{
                 "tags": [
                     "application"
                 ],
-                "summary": "查看待添加好友",
+                "summary": "搜索邮箱查看待添加好友",
                 "parameters": [
                     {
-                        "type": "string",
                         "description": "按邮箱搜索",
-                        "name": "username",
-                        "in": "query"
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.FindPerson"
+                        }
                     }
                 ],
                 "responses": {
@@ -341,14 +344,72 @@ const docTemplate = `{
                 }
             }
         },
-        "/chat/unread": {
-            "get": {
+        "/chat/show/all": {
+            "post": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "展示侧边栏私聊情况",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Chat"
+                ],
+                "summary": "展示所有未被删除的聊天框（侧边框）",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Contact"
+                        }
+                    }
+                }
+            }
+        },
+        "/contact/change/remark": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Contact"
+                ],
+                "summary": "修改朋友备注",
+                "parameters": [
+                    {
+                        "description": "修改备注请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.FriendRemark"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/contact/friend/main": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "consumes": [
                     "application/json"
                 ],
@@ -356,14 +417,49 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "chat"
+                    "Contact"
                 ],
-                "summary": "私聊",
+                "summary": "查看朋友详细信息",
+                "parameters": [
+                    {
+                        "description": "查看请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.FriendMain"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/models.ContactResponse"
+                            "$ref": "#/definitions/models.ContactMain"
+                        }
+                    }
+                }
+            }
+        },
+        "/contact/list": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Contact"
+                ],
+                "summary": "查看通讯录",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Contact"
                         }
                     }
                 }
@@ -814,17 +910,43 @@ const docTemplate = `{
                 }
             }
         },
-        "models.ContactResponse": {
+        "models.Contact": {
             "type": "object",
             "properties": {
                 "error": {
                     "type": "string"
                 },
-                "friend": {
+                "list": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/models.MainFriend"
+                        "$ref": "#/definitions/models.ListContact"
                     }
+                }
+            }
+        },
+        "models.ContactMain": {
+            "type": "object",
+            "properties": {
+                "friend-picture": {
+                    "type": "string"
+                },
+                "friend_email": {
+                    "type": "string"
+                },
+                "friend_id": {
+                    "type": "integer"
+                },
+                "friend_name": {
+                    "type": "string"
+                },
+                "gender": {
+                    "type": "integer"
+                },
+                "remark": {
+                    "type": "string"
+                },
+                "signature": {
+                    "type": "string"
                 }
             }
         },
@@ -898,6 +1020,33 @@ const docTemplate = `{
                 }
             }
         },
+        "models.FindPerson": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.FriendMain": {
+            "type": "object",
+            "properties": {
+                "friend_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.FriendRemark": {
+            "type": "object",
+            "properties": {
+                "friend_id": {
+                    "type": "integer"
+                },
+                "remark": {
+                    "type": "string"
+                }
+            }
+        },
         "models.HistoryMsg": {
             "type": "object",
             "required": [
@@ -947,6 +1096,26 @@ const docTemplate = `{
                 }
             }
         },
+        "models.ListContact": {
+            "type": "object",
+            "properties": {
+                "friend_id": {
+                    "type": "integer"
+                },
+                "friend_name": {
+                    "type": "string"
+                },
+                "friend_picture": {
+                    "type": "string"
+                },
+                "remark": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
         "models.LoginResponse": {
             "type": "object",
             "properties": {
@@ -973,20 +1142,6 @@ const docTemplate = `{
                 },
                 "password": {
                     "type": "string"
-                }
-            }
-        },
-        "models.MainFriend": {
-            "type": "object",
-            "properties": {
-                "friend_id": {
-                    "type": "integer"
-                },
-                "last_msg_time": {
-                    "type": "string"
-                },
-                "unread": {
-                    "type": "integer"
                 }
             }
         },

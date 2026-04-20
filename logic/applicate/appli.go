@@ -5,6 +5,8 @@ import (
 	"IM_chat/dao/sql"
 	"IM_chat/models"
 	"IM_chat/pkg/errcode"
+	dbsql "database/sql"
+	"errors"
 	"strconv"
 )
 
@@ -21,7 +23,15 @@ func userAvatarURL(userID int64) string {
 
 func SearchAppli(user *models.FindPerson) (find *models.FindMiddle, err1 string) {
 	var err error
-	if user.SendID, err = sql.SearchID(user.SendEmail); err != nil || user.UserID <= 0 {
+	if user.SendID, err = sql.SearchID(user.SendEmail); err != nil {
+		if errors.Is(err, dbsql.ErrNoRows) {
+			err1 = errcode.Msg(errcode.NoPerson)
+			return
+		}
+		err1 = errcode.Msg(errcode.ERROR)
+		return
+	}
+	if user.SendID <= 0 {
 		err1 = errcode.Msg(errcode.NoPerson)
 		return
 	}
@@ -29,6 +39,7 @@ func SearchAppli(user *models.FindPerson) (find *models.FindMiddle, err1 string)
 		err1 = errcode.Msg(errcode.NotAddMy)
 		return
 	}
+
 	find = &models.FindMiddle{
 		SendEmail: user.SendEmail,
 		SendID:    user.SendID,
@@ -46,6 +57,9 @@ func SearchNameAppli(user *models.FindNamePerson) (find []models.FindNameMiddle,
 		return
 	}
 	for i := 0; i < len(userDetail); i++ {
+		if userDetail[i].ID == user.UserID {
+			continue
+		}
 		pic, _ := sql.SearchPicture(userDetail[i].ID)
 		find = append(find, models.FindNameMiddle{
 			SendEmail:    userDetail[i].Email,
@@ -59,6 +73,14 @@ func SearchNameAppli(user *models.FindNamePerson) (find []models.FindNameMiddle,
 }
 
 func GetAppli(user *models.AppliSearch) string {
+	var err error
+	user.SendID, err = sql.SearchID(user.SendEmail)
+	if err != nil {
+		return errcode.Msg(errcode.NoPerson)
+	}
+	if user.UserID == user.SendID {
+		return errcode.Msg(errcode.NotAddMy)
+	}
 	ok, err := redisdao.SetApplyLock(user.UserID, user.SendID)
 	if err != nil {
 		return errcode.Msg(errcode.ERROR)
@@ -144,6 +166,9 @@ func RefuseFriend(friend *models.RefuseFriend) string {
 	if friend.AppliID, err = redisdao.GetApplyPair(friend.UserID, friend.Account_id); err != nil {
 		return errcode.Msg(errcode.ERROR)
 	}
+	if friend.AppliID <= 0 {
+		return errcode.Msg(errcode.NoSend)
+	}
 	if err = sql.ChangeStatusByPair(friend.AppliID, friend.Account_id, friend.UserID, 2); err != nil {
 		return errcode.Msg(errcode.ERROR)
 	}
@@ -160,6 +185,9 @@ func RefuseFriend(friend *models.RefuseFriend) string {
 }
 func AcceptFriend(user *models.AcceptFriend) string {
 	var err error
+	if user.UserID <= 0 || user.Account_id <= 0 {
+		return errcode.Msg(errcode.InvalidParams)
+	}
 	if user.AppliID, err = redisdao.GetApplyPair(user.UserID, user.Account_id); err != nil {
 		return errcode.Msg(errcode.ERROR)
 	}

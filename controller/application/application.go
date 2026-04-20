@@ -15,13 +15,13 @@ func NewAppliController() *AppliController {
 }
 
 // SearchAppli godoc
-// @Summary 查看待添加好友
+// @Summary 搜索邮箱查看待添加好友
 // @Tags application
 // @Produce json
-// @Param username query string false "按邮箱搜索"
+// @Param request body models.FindPerson true "按邮箱搜索"
 // @Success 200 {object} models.FindEnd
 // @Security BearerAuth
-// @Router /application/search/email [get]
+// @Router /application/search/email [post]
 func (AppliController) SearchAppli(c *gin.Context) {
 	userIDVal, ok := c.Get(middlewares.CtxUserIDKey)
 	if !ok {
@@ -34,8 +34,7 @@ func (AppliController) SearchAppli(c *gin.Context) {
 		c.JSON(401, errcode.Msg(errcode.CodeInvalidToken))
 		return
 	}
-
-	if err := c.ShouldBindQuery(&req); err != nil {
+	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(200, "ParamErr")
 		return
 	}

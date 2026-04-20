@@ -18,6 +18,7 @@ const (
 	CodeNeedLogin       = 2008
 	CodeInvalidToken    = 2009
 	DontSendCode        = 2010
+	DontEmailAgain      = 2011
 	NoPerson            = 3001
 	NotSendApply        = 3002
 	ErrAlreadyRequested = 3003
@@ -26,6 +27,11 @@ const (
 	ErrorForList        = 4001
 	ErrForKafka         = 5001
 	KafTimeOut          = 5002
+	NotFriend           = 5003
+	DontFriend          = 5004
+	N1                  = 1
+	N2                  = 2
+	N3                  = 3
 )
 
 var codeMsg = map[int]string{
@@ -37,6 +43,7 @@ var codeMsg = map[int]string{
 	HasSendCode:  "请勿重复发送",
 
 	PasswordNotMatch:    "两次密码输入不一致",
+	DontEmailAgain:      "不可重复注册邮箱",
 	CodeError:           "验证码错误",
 	HasRegister:         "此邮箱已被注册",
 	NotRegister:         "注册失败",
@@ -53,8 +60,15 @@ var codeMsg = map[int]string{
 	DontSendCode:        "发送验证码失败",
 
 	ErrorForList: "读取用户列表失败",
-	ErrForKafka:  "kafka代理未配置",
-	KafTimeOut:   "kafka超时发送",
+
+	ErrForKafka: "kafka代理未配置",
+	KafTimeOut:  "kafka超时发送",
+
+	NotFriend:  "暂无好友",
+	DontFriend: "和此人不为好友",
+	N1:         "1",
+	N2:         "2",
+	N3:         "3",
 }
 
 func Msg(code int) string {

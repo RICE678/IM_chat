@@ -1,10 +1,13 @@
 package kafka
 
 import (
+	"IM_chat/dao/sql"
 	"IM_chat/models"
 	"IM_chat/pkg/errcode"
+	"IM_chat/pkg/snowflake"
 	"encoding/json"
 	"github.com/IBM/sarama"
+	"go.uber.org/zap"
 	"time"
 
 	"log"
@@ -24,6 +27,7 @@ func InitProducer(cfg *models.KafkaConfig) string {
 	saramaConfig.Producer.RequiredAcks = sarama.WaitForAll
 	saramaConfig.Producer.Compression = sarama.CompressionSnappy
 	saramaConfig.Producer.Retry.Max = 3
+	saramaConfig.Producer.Return.Successes = true
 	var err error
 	producer, err = sarama.NewAsyncProducer(brokers, saramaConfig)
 	if err != nil {
@@ -55,7 +59,7 @@ func Close() {
 	}
 }
 
-func Publish(topic string, key string, value interface{}) string {
+func Publish(topic string, key string, value *models.WsMsg) string {
 	if producer == nil {
 		return errcode.Msg(errcode.ErrForKafka)
 	}
@@ -68,7 +72,21 @@ func Publish(topic string, key string, value interface{}) string {
 		Key:   sarama.StringEncoder(key),
 		Value: sarama.ByteEncoder(data),
 	}
-
+	dbMsg := &models.ChatMsg{
+		ID:         snowflake.Generate(),
+		UserID:     value.SenderID,
+		ReceiverID: value.ReceiverID,
+		Context:    value.Msg,
+		MsgType:    value.MsgType,
+	}
+	if err = sql.SaveMessage(dbMsg); err != nil {
+		zap.L().Error("save msg failed", zap.Error(err))
+		return errcode.Msg(errcode.ERROR)
+	}
+	if err = sql.InsertUnRead(value); err != nil {
+		zap.L().Error("insert unread failed", zap.Error(err))
+		return errcode.Msg(errcode.ERROR)
+	}
 	select {
 	case producer.Input() <- msg:
 		return errcode.Msg(errcode.SUCCESS)

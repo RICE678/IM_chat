@@ -7,6 +7,7 @@ import (
 	"log"
 	"strconv"
 	"sync"
+	"time"
 )
 
 type PersistConsumer struct {
@@ -18,15 +19,11 @@ type PersistConsumer struct {
 	wg      sync.WaitGroup
 }
 
-// persistHandler 实现了 sarama.ConsumerGroupHandler 接口。
-// 它把每条消息的具体业务处理委托给 handleFunc，便于外部注入业务逻辑。
 type persistHandler struct {
 	ready      chan bool
 	handleFunc func(topic string, key []byte, value []byte) error
 }
 
-// NewPersistConsumer 创建一个 Kafka 消费组消费者。
-// group_id 是消费组标识；每消费到一条消息，都会调用一次 handleFunc。
 func NewPersistConsumer(
 	brokers []string,
 	group_id int64,
@@ -59,8 +56,6 @@ func NewPersistConsumer(
 	}, errcode.Msg(errcode.SUCCESS)
 }
 
-// Start 在后台 goroutine 中启动消费循环。
-// 发生 rebalance 后 Consume 可能返回，循环会继续拉起，直到调用 Stop。
 func (c *PersistConsumer) Start() {
 	c.wg.Add(1)
 	go func() {
@@ -73,33 +68,38 @@ func (c *PersistConsumer) Start() {
 				return
 			}
 			c.handler.ready = make(chan bool)
+
+			select {
+			case <-c.ctx.Done():
+				return
+			case <-time.After(2 * time.Second):
+			}
 		}
 	}()
-	<-c.handler.ready
-	log.Println("persistConsumer started")
+
+	select {
+	case <-c.handler.ready:
+		log.Println("persistConsumer started")
+	case <-time.After(10 * time.Second):
+		log.Println("persistConsumer: start timed out, will keep retrying in background")
+	}
 }
 
-// Stop 取消消费上下文，等待消费循环退出，并关闭 consumer group 客户端。
 func (c *PersistConsumer) Stop() error {
 	c.cancel()
 	c.wg.Wait()
 	return c.reader.Close()
 }
 
-// Setup 在每次消费组会话开始时被调用。
 func (h *persistHandler) Setup(sarama.ConsumerGroupSession) error {
 	close(h.ready)
 	return nil
 }
 
-// Cleanup 在会话结束时被调用（例如发生 rebalance）。
 func (h *persistHandler) Cleanup(sarama.ConsumerGroupSession) error {
 	return nil
 }
 
-// ConsumeClaim 负责消费当前 claim（分区分配）中的消息。
-// 只有 handleFunc 成功后才调用 MarkMessage，表示这条消息“已处理完成”，
-// 这样提交的 offset 语义才是可靠的“处理完成再提交”。
 func (h *persistHandler) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
 	for msg := range claim.Messages() {
 		var key []byte

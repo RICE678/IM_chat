@@ -36,7 +36,7 @@ func ListApplySent(fromID int64) ([]ApplyRow, error) {
 
 func ListApplyTo(toID int64) ([]ApplyRow, error) {
 	var rows []ApplyRow
-	err := mysql.DB().Select(&rows, "select id,from_id,to_id,remark,status,create_time from apply where to_id=? order by create_time desc", toID)
+	err := mysql.DB().Select(&rows, "select id,from_id,to_id,remark,status,create_time from apply where to_id=? and status=0 order by create_time desc", toID)
 	if err != nil {
 		return nil, err
 	}

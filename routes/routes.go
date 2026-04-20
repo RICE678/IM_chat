@@ -18,6 +18,7 @@ func Setup() *gin.Engine {
 	userController := user.NewUserController()
 	applyController := application.NewAppliController()
 	chatController := chat.NewChatController()
+	contactController := chat.NewContactController()
 	r.Use(middlewares.Cors(), middlewares.GinLogger(), middlewares.GinRecovery(true))
 	r.GET("/", func(c *gin.Context) {
 		c.String(http.StatusOK, "ok")
@@ -47,7 +48,7 @@ func Setup() *gin.Engine {
 	{
 		applicationGroup.Use(middlewares.JWTAuthMiddleware())
 		{
-			applicationGroup.GET("/search/email", applyController.SearchAppli)
+			applicationGroup.POST("/search/email", applyController.SearchAppli)
 			applicationGroup.POST("/search/name", applyController.SearchNameAppli)
 			applicationGroup.POST("/create", applyController.CreateAppli)
 			applicationGroup.GET("/mylist", applyController.ListMyAppli)
@@ -60,10 +61,18 @@ func Setup() *gin.Engine {
 	{
 		chatGroup.Use(middlewares.JWTAuthMiddleware())
 		{
-
+			chatGroup.GET("/show/all", chatController.ShowFriend)
 			chatGroup.GET("/history", chatController.SearchHistory)
-			chatGroup.GET("/unread", chatController.SearchUnread)
 			chatGroup.POST("/read", chatController.EnterRead)
+		}
+	}
+	contactGroup := r.Group("/contact")
+	{
+		contactGroup.Use(middlewares.JWTAuthMiddleware())
+		{
+			contactGroup.POST("/list", contactController.SearchContact)
+			contactGroup.POST("/friend/main", contactController.SearchContactMain)
+			contactGroup.POST("/change/remark", contactController.ChangeRemark)
 		}
 	}
 	r.Any("/socket.io/*any", chatController.ServeSocketIO)

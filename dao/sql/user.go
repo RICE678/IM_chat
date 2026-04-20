@@ -18,6 +18,7 @@ const defaultPictureID = 1
 type User struct {
 	ID         int64     `db:"id"`
 	Name       string    `db:"username"`
+	Remark     string    `db:"remark"`
 	Password   string    `db:"password"`
 	Email      string    `db:"email"`
 	Gender     int       `db:"gender"`
@@ -62,7 +63,7 @@ func Login(email, password string) error {
 
 func SearchID(email string) (int64, error) {
 	var user User
-	err := mysql.DB().Get(&user, "select id from users where email=?", email)
+	err := mysql.DB().Get(&user.ID, "select id from users where email=? and is_del=0", email)
 	if err != nil {
 		return 0, err
 	}
@@ -156,7 +157,7 @@ func SearchUserMain(userID int64) (u User, err error) {
 	return
 }
 func DeleteUser(id int64) error {
-	_, err := mysql.DB().Exec("update users set id_del=? where id=?", 1, id)
+	_, err := mysql.DB().Exec("update users set is_del=? where id=?", 1, id)
 	if err != nil {
 		return err
 	}
@@ -193,4 +194,14 @@ func ShowPicture() ([]models.Pictures, error) {
 	var pictures []models.Pictures
 	err := mysql.DB().Select(&pictures, "SELECT id, web FROM picture ORDER BY id ASC")
 	return pictures, err
+}
+
+func SearchRemark(userID int64, friendID int64) (rename string, err error) {
+	err = mysql.DB().Get(&rename, "select COALESCE(remark, '') from contact where user_id=? and friend_id=?", userID, friendID)
+	return
+}
+
+func ChangeRemark(userID int64, friendID int64, remark string) (err error) {
+	_, err = mysql.DB().Exec("update contact set remark=? where user_id=? and friend_id=?", remark, userID, friendID)
+	return
 }

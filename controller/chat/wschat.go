@@ -5,30 +5,61 @@ import (
 	"IM_chat/middlewares"
 	"IM_chat/models"
 	"IM_chat/pkg/errcode"
+	"net/http"
+
 	"github.com/gin-gonic/gin"
-	socketio "github.com/googollee/go-socket.io"
 )
 
 type ChatController struct {
-	SocketServer *socketio.Server
+	Handler http.Handler
 }
 
 func NewChatController() *ChatController {
-	server := ws.NewSocketIOServer()
-	go server.Serve()
-	return &ChatController{SocketServer: server}
+	_, handler := ws.NewSocketIOServer()
+	return &ChatController{Handler: handler}
 }
 
+// ServeSocketIO godoc
+// @Summary Socket.IO 私聊通道
+// @Description 通过 query 参数 token 建立 Socket.IO 连接，连接后客户端发送 `msg` 事件。
+// @Description `msg_type=1` 表示文本消息：需要 `msg`。
+// @Description `msg_type=2` 表示文件消息：建议同时传 `file_url`、`file_name`，并将 `msg` 设为 `file_url`。
+// @Description 服务端会回推 `message` 事件，发送成功后会返回 `type=ack` 的确认消息。
+// @Tags chat
+// @Accept json
+// @Produce json
+// @Param token query string true "JWT Token"
+// @Param any path string true "socket.io transport path"
+// @Success 101 {string} string "Switching Protocols"
+// @Router /socket.io/{any} [get]
 func (cc *ChatController) ServeSocketIO(c *gin.Context) {
-	cc.SocketServer.ServeHTTP(c.Writer, c.Request)
+	cc.Handler.ServeHTTP(c.Writer, c.Request)
 }
 
-func (cc *ChatController) Shutdown() {
-	_ = cc.SocketServer.Close()
-}
-
-func (cc *ChatController) SendMsg(c *gin.Context) {
-	cc.ServeSocketIO(c)
+// ShowFriend godoc
+// @Summary 展示所有未被删除的聊天框（侧边栏）
+// @Tags chat
+// @Produce json
+// @Success 200 {object} models.Contact
+// @Security BearerAuth
+// @Router /chat/show/all [get]
+func (ChatController) ShowFriend(c *gin.Context) {
+	userVal, ok := c.Get(middlewares.CtxUserIDKey)
+	if !ok {
+		c.JSON(401, errcode.Msg(errcode.CodeNeedLogin))
+		return
+	}
+	userID, ok := userVal.(int64)
+	if !ok {
+		c.JSON(401, errcode.Msg(errcode.CodeInvalidToken))
+		return
+	}
+	res, err := ws.SearchShowList(userID)
+	c.JSON(200, models.Contact{
+		List: res,
+		Err:  err,
+	})
+	return
 }
 
 // SearchHistory godoc
@@ -72,36 +103,8 @@ func (ChatController) SearchHistory(c *gin.Context) {
 	})
 }
 
-// SearchUnread godoc
-// @Summary 私聊
-// @Description 展示侧边栏私聊情况
-// @Tags chat
-// @Accept json
-// @Produce json
-// @Success 200 {object} models.ContactResponse
-// @Security BearerAuth
-// @Router /chat/unread [get]
-func (ChatController) SearchUnread(c *gin.Context) {
-	userVal, ok := c.Get(middlewares.CtxUserIDKey)
-	if !ok {
-		c.JSON(401, errcode.Msg(errcode.CodeNeedLogin))
-		return
-	}
-	userID, ok := userVal.(int64)
-	if !ok {
-		c.JSON(401, errcode.Msg(errcode.CodeInvalidToken))
-		return
-	}
-	friends, err := ws.UnReadMain(userID)
-	c.JSON(200, models.ContactResponse{
-		Err:    err,
-		Friend: friends,
-	})
-
-}
-
 // EnterRead godoc
-// @Summary 更改消息为已读
+// @Summary 更改会话消息为已读
 // @Tags chat
 // @Accept json
 // @Produce json

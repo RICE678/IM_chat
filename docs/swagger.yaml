@@ -58,14 +58,31 @@ definitions:
     - msg_type
     - receiver_id
     type: object
-  models.ContactResponse:
+  models.Contact:
     properties:
       error:
         type: string
-      friend:
+      list:
         items:
-          $ref: '#/definitions/models.MainFriend'
+          $ref: '#/definitions/models.ListContact'
         type: array
+    type: object
+  models.ContactMain:
+    properties:
+      friend-picture:
+        type: string
+      friend_email:
+        type: string
+      friend_id:
+        type: integer
+      friend_name:
+        type: string
+      gender:
+        type: integer
+      remark:
+        type: string
+      signature:
+        type: string
     type: object
   models.FindEnd:
     properties:
@@ -112,6 +129,23 @@ definitions:
     required:
     - name
     type: object
+  models.FindPerson:
+    properties:
+      email:
+        type: string
+    type: object
+  models.FriendMain:
+    properties:
+      friend_id:
+        type: integer
+    type: object
+  models.FriendRemark:
+    properties:
+      friend_id:
+        type: integer
+      remark:
+        type: string
+    type: object
   models.HistoryMsg:
     properties:
       msg:
@@ -144,6 +178,19 @@ definitions:
         example: success
         type: string
     type: object
+  models.ListContact:
+    properties:
+      friend_id:
+        type: integer
+      friend_name:
+        type: string
+      friend_picture:
+        type: string
+      remark:
+        type: string
+      user_id:
+        type: integer
+    type: object
   models.LoginResponse:
     properties:
       msg:
@@ -162,15 +209,6 @@ definitions:
     required:
     - email
     - password
-    type: object
-  models.MainFriend:
-    properties:
-      friend_id:
-        type: integer
-      last_msg_time:
-        type: string
-      unread:
-        type: integer
     type: object
   models.PictureMainReturn:
     properties:
@@ -383,12 +421,14 @@ paths:
       tags:
       - application
   /application/search/email:
-    get:
+    post:
       parameters:
       - description: 按邮箱搜索
-        in: query
-        name: username
-        type: string
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.FindPerson'
       produces:
       - application/json
       responses:
@@ -398,7 +438,7 @@ paths:
             $ref: '#/definitions/models.FindEnd'
       security:
       - BearerAuth: []
-      summary: 查看待添加好友
+      summary: 搜索邮箱查看待添加好友
       tags:
       - application
   /application/search/name:
@@ -477,23 +517,78 @@ paths:
       summary: 更改消息为已读
       tags:
       - chat
-  /chat/unread:
-    get:
-      consumes:
-      - application/json
-      description: 展示侧边栏私聊情况
+  /chat/show/all:
+    post:
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.ContactResponse'
+            $ref: '#/definitions/models.Contact'
       security:
       - BearerAuth: []
-      summary: 私聊
+      summary: 展示所有未被删除的聊天框（侧边框）
       tags:
-      - chat
+      - Chat
+  /contact/change/remark:
+    post:
+      parameters:
+      - description: 修改备注请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.FriendRemark'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: 修改朋友备注
+      tags:
+      - Contact
+  /contact/friend/main:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 查看请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.FriendMain'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ContactMain'
+      security:
+      - BearerAuth: []
+      summary: 查看朋友详细信息
+      tags:
+      - Contact
+  /contact/list:
+    post:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Contact'
+      security:
+      - BearerAuth: []
+      summary: 查看通讯录
+      tags:
+      - Contact
   /email/send:
     post:
       consumes:

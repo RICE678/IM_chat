@@ -3,28 +3,29 @@ package ws
 import (
 	"IM_chat/models"
 	"encoding/json"
-	socketio "github.com/googollee/go-socket.io"
-	"go.uber.org/zap"
 	"sync"
+
+	"github.com/zishang520/socket.io/servers/socket/v3"
+	"go.uber.org/zap"
 )
 
 type Client struct {
 	UserID int64
-	Conn   socketio.Conn
+	Sock   *socket.Socket
 	once   sync.Once
 }
 
-func NewClient(userID int64, conn socketio.Conn) *Client {
+func NewClient(userID int64, sock *socket.Socket) *Client {
 	return &Client{
 		UserID: userID,
-		Conn:   conn,
+		Sock:   sock,
 	}
 }
 
 func (c *Client) Close() {
 	c.once.Do(func() {
 		GlobalManager.Unregister(c)
-		_ = c.Conn.Close()
+		c.Sock.Disconnect(true)
 	})
 }
 
@@ -34,5 +35,10 @@ func (c *Client) Send(msg *models.WsMsg) {
 		zap.L().Error("marshal msg failed", zap.Error(err))
 		return
 	}
-	c.Conn.Emit("message", data)
+	var raw map[string]any
+	if err := json.Unmarshal(data, &raw); err != nil {
+		zap.L().Error("unmarshal to map failed", zap.Error(err))
+		return
+	}
+	c.Sock.Emit("message", raw)
 }

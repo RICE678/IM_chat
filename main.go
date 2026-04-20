@@ -2,13 +2,18 @@ package main
 
 import (
 	_ "IM_chat/docs"
+	"IM_chat/logic/mq"
+	"IM_chat/pkg/errcode"
+	kafka "IM_chat/pkg/kafkapkg"
+	"IM_chat/pkg/snowflake"
+
+	//"IM_chat/logic/mq"
 	"IM_chat/middlewares"
 	"IM_chat/pkg/config"
-	"IM_chat/pkg/errcode"
-	"IM_chat/pkg/kafka"
+	//"IM_chat/pkg/errcode"
+	//"IM_chat/pkg/kafkapkg"
 	"IM_chat/pkg/mysql"
 	"IM_chat/pkg/redis"
-	"IM_chat/pkg/snowflake"
 	"IM_chat/routes"
 	"IM_chat/settings"
 	"context"
@@ -73,6 +78,19 @@ func main() {
 	kafka.InitKafka(&cfg.Kafka)
 	if initMsg := kafka.InitProducer(&cfg.Kafka); initMsg != errcode.Msg(errcode.SUCCESS) {
 		fmt.Printf("init kafka failed, msg:%s\n", initMsg)
+	}
+	groupID := int64(cfg.Kafka.GroupID)
+	consumer, errStr := kafka.NewPersistConsumer(
+		cfg.Kafka.Brokers,
+		groupID,
+		[]string{kafka.TopicPrivateMsg},
+		mq.HandleKafkaMessage,
+	)
+	if errStr != errcode.Msg(errcode.SUCCESS) {
+		fmt.Printf("init kafka failed, msg:%s\n", errStr)
+	} else {
+		go consumer.Start()
+		defer consumer.Stop()
 	}
 	if err := snowflake.Init(viper.GetString("app.start_time"), viper.GetInt64("app.machine_id")); err != nil {
 		fmt.Printf("init snowflake failed,err:%v\n", err)

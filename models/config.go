@@ -18,6 +18,7 @@ type KafkaConfig struct {
 	Brokers []string    `json:"brokers"`
 	Topic   string      `json:"topic"`
 	Topics  KafkaTopics `json:"topics"`
+	GroupID int         `json:"group_id"`
 }
 type KafkaTopics struct {
 	GroupMsgRaw     string `json:"group_msg_raw"`

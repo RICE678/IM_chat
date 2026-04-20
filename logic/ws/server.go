@@ -3,45 +3,68 @@ package ws
 import (
 	"IM_chat/models"
 	"IM_chat/pkg/jwt"
-	socketio "github.com/googollee/go-socket.io"
+	"encoding/json"
+	"net/http"
+
+	"github.com/zishang520/socket.io/servers/socket/v3"
 	"go.uber.org/zap"
 )
 
-func NewSocketIOServer() *socketio.Server {
-	server := socketio.NewServer(nil)
-	server.OnConnect("/", func(conn socketio.Conn) error {
-		u := conn.URL()
-		token := u.Query().Get("token")
+func NewSocketIOServer() (*socket.Server, http.Handler) {
+	io := socket.NewServer(nil, nil)
+
+	io.On("connection", func(args ...any) {
+		sock := args[0].(*socket.Socket)
+
+		token := sock.Handshake().Query.Query().Get("token")
 		if token == "" {
-			_ = conn.Close()
-			return nil
-		}
-		userID, err := jwt.ParseToken(token)
-		if err != nil {
-			_ = conn.Close()
-			return nil
-		}
-		ID := userID.UserID
-		client := NewClient(ID, conn)
-		conn.SetContext(client)
-		GlobalManager.Register(client)
-		return nil
-	})
-	server.OnEvent("/", "msg", func(conn socketio.Conn, msg models.WsMsg) {
-		client, ok := conn.Context().(*Client)
-		if !ok {
+			sock.Disconnect(true)
 			return
 		}
-		msg.SenderID = client.UserID
-		HandleMessage(client, &msg)
-	})
-	server.OnDisconnect("/", func(conn socketio.Conn, reason string) {
-		if client, ok := conn.Context().(*Client); ok {
-			client.Close()
+		claims, err := jwt.ParseToken(token)
+		if err != nil {
+			sock.Disconnect(true)
+			return
 		}
+
+		client := NewClient(claims.UserID, sock)
+		sock.SetData(client)
+		GlobalManager.Register(client)
+
+		sock.On("msg", func(datas ...any) {
+			if len(datas) == 0 {
+				return
+			}
+			raw, err := json.Marshal(datas[0])
+			if err != nil {
+				zap.L().Error("marshal event data failed", zap.Error(err))
+				return
+			}
+			var msg models.WsMsg
+			if err := json.Unmarshal(raw, &msg); err != nil {
+				zap.L().Error("unmarshal WsMsg failed", zap.Error(err))
+				return
+			}
+			msg.SenderID = client.UserID
+			if msg.MsgType == 2 {
+				if msg.Msg == "" && msg.FileURL != "" {
+					msg.Msg = msg.FileURL
+				}
+				if msg.Msg == "" {
+					zap.L().Warn("file msg missing url", zap.Int64("sender_id", msg.SenderID), zap.Int("msg_type", msg.MsgType))
+					return
+				}
+				if msg.FileURL == "" {
+					msg.FileURL = msg.Msg
+				}
+			}
+			HandleMessage(client, &msg)
+		})
+
+		sock.On("disconnect", func(...any) {
+			client.Close()
+		})
 	})
-	server.OnError("/", func(conn socketio.Conn, err error) {
-		zap.L().Error("socketio error", zap.Error(err))
-	})
-	return server
+
+	return io, io.ServeHandler(nil)
 }

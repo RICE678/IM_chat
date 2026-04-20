@@ -10,6 +10,8 @@ import (
 	"IM_chat/pkg/jwt"
 	"IM_chat/pkg/redis"
 	"context"
+	databasesql "database/sql"
+	"errors"
 	"fmt"
 	"time"
 )
@@ -91,10 +93,16 @@ func UpdateDetail(user *models.ReUpdate) string {
 
 func ReEmail(user *models.ReEmail) string {
 	var err error
-	if user.Email, err = sql.SearchEmail(user.UserID); err != nil {
+
+	id, err := sql.SearchID(user.NewEmail)
+	if err != nil && !errors.Is(err, databasesql.ErrNoRows) {
 		return errcode.Msg(errcode.ERROR)
 	}
-	codes := redis.RDB.Get(context.Background(), "email:"+user.Email).Val()
+	if id > 0 {
+		return errcode.Msg(errcode.DontEmailAgain)
+	}
+
+	codes := redis.RDB.Get(context.Background(), "email:"+user.NewEmail).Val()
 	if codes != user.Code {
 		return errcode.Msg(errcode.CodeError)
 	}
@@ -104,7 +112,7 @@ func ReEmail(user *models.ReEmail) string {
 	if err = sql.ReSetEmail(user.UserID, user.NewEmail); err != nil {
 		return errcode.Msg(errcode.ERROR)
 	}
-	redis.RDB.Del(context.Background(), "email:"+user.Email)
+	redis.RDB.Del(context.Background(), "email:"+user.NewEmail)
 	if err = redis2.ReEmailRedis(user); err != nil {
 		return errcode.Msg(errcode.ERROR)
 	}
@@ -176,5 +184,6 @@ func SearchPictures() (ps []models.Pictures, err string) {
 		err = errcode.Msg(errcode.ERROR)
 		return
 	}
+	err = errcode.Msg(errcode.SUCCESS)
 	return
 }

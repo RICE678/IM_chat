@@ -12,7 +12,7 @@ type AppliSearch struct {
 }
 
 type FindPerson struct {
-	SendEmail string `json:"email"`
+	SendEmail string `json:"email" form:"email" `
 	UserID    int64  `json:"-"`
 	SendID    int64  `json:"-"`
 }

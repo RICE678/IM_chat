@@ -4,10 +4,10 @@ import "IM_chat/models"
 
 func InitKafka(cfg *models.KafkaConfig) {
 	if cfg.Topics.GroupMsgRaw != "" {
-		TopicGroupMsgRaw = "group_msg_raw"
+		TopicGroupMsgRaw = cfg.Topics.GroupMsgRaw
 	}
 	if cfg.Topics.GroupMsgPublish != "" {
-		TopicGroupMsgPublish = "group_msg_publish"
+		TopicGroupMsgPublish = cfg.Topics.GroupMsgPublish
 	}
 	if cfg.Topics.PrivateMsg != "" {
 		TopicPrivateMsg = cfg.Topics.PrivateMsg

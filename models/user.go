@@ -30,8 +30,8 @@ type ReUpdate struct {
 type ReEmail struct {
 	NewEmail string `json:"new_email" form:"new_email" binding:"required"`
 	Code     string `json:"code" form:"code" binding:"required"`
-	Email    string `json:"-"`
 	UserID   int64  `json:"-"`
+	Email    string `json:"-"`
 	Password string `json:"-"`
 }
 
