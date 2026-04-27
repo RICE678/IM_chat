@@ -5,15 +5,19 @@ import (
 	"IM_chat/controller/chat"
 	"IM_chat/controller/email"
 	"IM_chat/controller/user"
+	"IM_chat/logic/chatupload"
 	"IM_chat/middlewares"
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
-	"net/http"
 )
 
 func Setup() *gin.Engine {
 	r := gin.New()
+	r.MaxMultipartMemory = 32 << 20
+	r.Static(chatupload.UploadURLPrefix, chatupload.DiskDir())
 	emailController := email.NewEmailController()
 	userController := user.NewUserController()
 	applyController := application.NewAppliController()
@@ -24,6 +28,12 @@ func Setup() *gin.Engine {
 		c.String(http.StatusOK, "ok")
 	})
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	r.StaticFile("/docs/asyncapi.yaml", "./docs/asyncapi.yaml")
+	r.StaticFile("/docs/socketio.md", "./docs/socketio_protocol.md")
+	r.StaticFile("/docs/socketio", "./docs/asyncapi.html")
+	r.GET("/docs", func(c *gin.Context) {
+		c.Redirect(http.StatusFound, "/docs/socketio")
+	})
 	emailGroup := r.Group("/email")
 	{
 		emailGroup.POST("/send", emailController.ConfirmUserEmail)
@@ -62,8 +72,10 @@ func Setup() *gin.Engine {
 		chatGroup.Use(middlewares.JWTAuthMiddleware())
 		{
 			chatGroup.GET("/show/all", chatController.ShowFriend)
+			chatGroup.POST("/del", chatController.FriendChatDel)
 			chatGroup.GET("/history", chatController.SearchHistory)
 			chatGroup.POST("/read", chatController.EnterRead)
+			chatGroup.POST("/upload", chatController.UploadChatFile)
 		}
 	}
 	contactGroup := r.Group("/contact")

@@ -1,7 +1,6 @@
 package sql
 
 import (
-	"IM_chat/models"
 	"IM_chat/pkg/mysql"
 	"IM_chat/pkg/snowflake"
 	"fmt"
@@ -19,18 +18,23 @@ type ContactRow struct {
 	Unread_contact int       `db:"unread_contact"`
 }
 
-func CreateContact(user models.AcceptFriend) error {
-	if user.UserID <= 0 || user.Account_id <= 0 {
-		return fmt.Errorf("invalid contact ids: userID=%d account_id=%d", user.UserID, user.Account_id)
+func ensureContact(userID, friendID int64) error {
+	if IsFriend(userID, friendID) {
+		return nil
 	}
 	id := snowflake.Generate()
-	_, err := mysql.DB().Exec("insert into contact(id,user_id,friend_id,friend_status)values(?,?,?,?)", id, user.UserID, user.Account_id, 1)
-	if err != nil {
+	_, err := mysql.DB().Exec("insert into contact(id,user_id,friend_id,friend_status)values(?,?,?,?)", id, userID, friendID, 1)
+	return err
+}
+
+func CreateContact(userID, friendID int64) error {
+	if userID <= 0 || friendID <= 0 {
+		return fmt.Errorf("invalid contact ids: userID=%d friendID=%d", userID, friendID)
+	}
+	if err := ensureContact(userID, friendID); err != nil {
 		return err
 	}
-	id1 := snowflake.Generate()
-	_, err = mysql.DB().Exec("insert into contact(id,user_id,friend_id,friend_status)values(?,?,?,?)", id1, user.Account_id, user.UserID, 1)
-	return err
+	return ensureContact(friendID, userID)
 }
 
 func SearchUnRead(userID int64) ([]ContactRow, error) {
@@ -68,7 +72,6 @@ func SearchContact(userID int64) ([]User, error) {
 		join users u on u.id = c.friend_id
 		where c.user_id = ?
 			and c.friend_status = 1
-			and c.is_del = 0
 		order by
 			lower(
 				case
@@ -112,6 +115,11 @@ func SearchShow(userID int64) ([]User, error) {
 	return users, nil
 }
 
+func DeleteContact(userID, friendID int64) error {
+	_, err := mysql.DB().Exec("update contact set is_del=1 and unread_contact=0 where user_id=? and friend_id=?", userID, friendID)
+	return err
+}
+
 func IsFriend(userID, friendID int64) bool {
 	var exists int
 	err := mysql.DB().Get(
@@ -123,4 +131,12 @@ func IsFriend(userID, friendID int64) bool {
 		return false
 	}
 	return exists == 1
+}
+
+func DelUnReadMessage(userID, friendID int64) error {
+	_, err := mysql.MessagesDB().Exec(
+		"update messages set read_status=1 where ((sender_id=? and receiver_id=?) or (sender_id=? and receiver_id=?)) and read_status=0",
+		userID, friendID, friendID, userID,
+	)
+	return err
 }

@@ -29,6 +29,12 @@ const (
 	KafTimeOut          = 5002
 	NotFriend           = 5003
 	DontFriend          = 5004
+	ErrDelFriend        = 5005
+	ErrUploadEmpty      = 6001
+	ErrUploadTooLarge   = 6002
+	ErrUploadSave       = 6003
+	ErrUploadType       = 6004
+	ErrUploadBadName    = 6005
 	N1                  = 1
 	N2                  = 2
 	N3                  = 3
@@ -64,11 +70,19 @@ var codeMsg = map[int]string{
 	ErrForKafka: "kafka代理未配置",
 	KafTimeOut:  "kafka超时发送",
 
-	NotFriend:  "暂无好友",
-	DontFriend: "和此人不为好友",
-	N1:         "1",
-	N2:         "2",
-	N3:         "3",
+	NotFriend:    "暂无好友",
+	DontFriend:   "和此人不为好友",
+	ErrDelFriend: "删除聊天框失败",
+
+	ErrUploadEmpty:    "请选择要上传的文件",
+	ErrUploadTooLarge: "文件过大",
+	ErrUploadSave:     "文件保存失败",
+	ErrUploadType:     "不允许的文件类型",
+	ErrUploadBadName:  "无效的文件名",
+
+	N1: "1",
+	N2: "2",
+	N3: "3",
 }
 
 func Msg(code int) string {

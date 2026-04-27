@@ -163,50 +163,54 @@ func ListApp(userID int64) ([]models.Apply, string) {
 }
 func RefuseFriend(friend *models.RefuseFriend) string {
 	var err error
-	if friend.AppliID, err = redisdao.GetApplyPair(friend.UserID, friend.Account_id); err != nil {
+	if friend.ApplyID, err = redisdao.GetApplyPair(friend.UserID, friend.SenderID); err != nil {
 		return errcode.Msg(errcode.ERROR)
 	}
-	if friend.AppliID <= 0 {
+	if friend.ApplyID <= 0 {
 		return errcode.Msg(errcode.NoSend)
 	}
-	if err = sql.ChangeStatusByPair(friend.AppliID, friend.Account_id, friend.UserID, 2); err != nil {
+	if err = sql.ChangeStatusByPair(friend.ApplyID, friend.SenderID, friend.UserID, 2); err != nil {
 		return errcode.Msg(errcode.ERROR)
 	}
-	if err = redisdao.SetApplyStatus(friend.AppliID, 2); err != nil {
+	if err = redisdao.SetApplyStatus(friend.ApplyID, 2); err != nil {
 		return errcode.Msg(errcode.ERROR)
 	}
-	if err = redisdao.DelApplyFromInbox(friend.UserID, friend.AppliID); err != nil {
+	if err = redisdao.DelApplyFromInbox(friend.UserID, friend.ApplyID); err != nil {
 		return errcode.Msg(errcode.ERROR)
 	}
-	if err = redisdao.DelApplyPair(friend.UserID, friend.Account_id); err != nil {
+	if err = redisdao.DelApplyPair(friend.UserID, friend.SenderID); err != nil {
 		return errcode.Msg(errcode.ERROR)
 	}
 	return errcode.Msg(errcode.SUCCESS)
 }
 func AcceptFriend(user *models.AcceptFriend) string {
 	var err error
-	if user.UserID <= 0 || user.Account_id <= 0 {
+	if user.UserID <= 0 || user.SenderID <= 0 {
 		return errcode.Msg(errcode.InvalidParams)
 	}
-	if user.AppliID, err = redisdao.GetApplyPair(user.UserID, user.Account_id); err != nil {
+	if user.ApplyID, err = redisdao.GetApplyPair(user.UserID, user.SenderID); err != nil {
 		return errcode.Msg(errcode.ERROR)
 	}
-	if user.AppliID <= 0 {
+
+	if user.ApplyID <= 0 {
 		return errcode.Msg(errcode.NoSend)
 	}
-	if err = sql.ChangeStatusByPair(user.AppliID, user.Account_id, user.UserID, 1); err != nil {
+	if err = sql.ChangeStatusByPair(user.ApplyID, user.SenderID, user.UserID, 1); err != nil {
 		return errcode.Msg(errcode.ERROR)
 	}
-	if err = redisdao.SetApplyStatus(user.AppliID, 1); err != nil {
+	if err = redisdao.SetApplyStatus(user.ApplyID, 1); err != nil {
 		return errcode.Msg(errcode.ERROR)
 	}
-	if err = redisdao.DelApplyFromInbox(user.UserID, user.AppliID); err != nil {
+	if err = redisdao.DelApplyFromInbox(user.UserID, user.ApplyID); err != nil {
 		return errcode.Msg(errcode.ERROR)
 	}
-	if err = redisdao.DelApplyPair(user.UserID, user.Account_id); err != nil {
+	if err = sql.CreateContact(user.UserID, user.SenderID); err != nil {
 		return errcode.Msg(errcode.ERROR)
 	}
-	if err = sql.CreateContact(*user); err != nil {
+	if err = redisdao.InitUnreadCount(user.UserID, user.SenderID); err != nil {
+		return errcode.Msg(errcode.ERROR)
+	}
+	if err = redisdao.DelApplyPair(user.UserID, user.SenderID); err != nil {
 		return errcode.Msg(errcode.ERROR)
 	}
 	return errcode.Msg(errcode.SUCCESS)

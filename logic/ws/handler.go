@@ -1,6 +1,7 @@
 package ws
 
 import (
+	"IM_chat/dao/redisdao"
 	"IM_chat/dao/sql"
 	"IM_chat/models"
 	"IM_chat/pkg/errcode"
@@ -43,12 +44,18 @@ func HandleText(sender *Client, msg *models.WsMsg) {
 }
 
 func HandlePrivateMessage(sender *Client, msg *models.WsMsg) {
+	zap.L().Info("private msg in",
+		zap.Int64("from", msg.SenderID),
+		zap.Int64("to", msg.ReceiverID),
+		zap.String("content", msg.Msg))
 	if msg.ReceiverID == 0 || msg.Msg == "" {
+		zap.L().Warn("private msg dropped: empty receiver or content")
 		return
 	}
 	msg.Timestamp = time.Now().UnixMilli()
 	key := strconv.FormatInt(msg.ReceiverID, 10)
 	errStr := kafka2.Publish(kafka2.TopicPrivateMsg, key, msg)
+	zap.L().Info("kafka publish result", zap.String("err", errStr))
 	if errStr != errcode.Msg(errcode.SUCCESS) {
 		zap.L().Error("publish msg failed", zap.String("err", errStr))
 	}
@@ -59,6 +66,7 @@ func HandlePrivateMessage(sender *Client, msg *models.WsMsg) {
 		ReceiverID: msg.ReceiverID,
 		MsgType:    msg.MsgType,
 	}
+	zap.L().Info("sending ack to sender", zap.Int64("sender", sender.UserID))
 	sender.Send(ack)
 }
 
@@ -70,28 +78,28 @@ func HistoryMain(user *models.HistoryMsg) string {
 	return errcode.Msg(errcode.SUCCESS)
 }
 
-//	func UnReadMain(userID int64) ([]models.MainFriend, string) {
-//		rows, err := sql.SearchUnRead(userID)
-//		if err != nil {
-//			return nil, errcode.Msg(errcode.ErrorForList)
-//		}
-//		list := make([]models.MainFriend, 0, len(rows)+16)
-//		for _, r := range rows {
-//			list = append(list, models.MainFriend{
-//				FriendID:    r.FriendID,
-//				LastMsgTime: r.Last_msg_time,
-//				Unread:      r.Unread_contact,
-//			})
-//		}
-//		return list, errcode.Msg(errcode.SUCCESS)
-//	}
 func ReadMain(user *models.ReadContact) string {
 	if user.FriendID <= 0 {
 		return errcode.Msg(errcode.InvalidParams)
 	}
-	err := sql.ReadContact(user.UserID, user.FriendID)
+	if err1 := redisdao.CheckKeyMessage(user.FriendID, user.UserID); err1 != "" {
+		return err1
+	}
+	count, err := redisdao.GetUnreadCount(user.FriendID, user.UserID)
+	if err != nil && count == 0 {
+		return errcode.Msg(errcode.SUCCESS)
+	}
+	err = sql.ReadContact(user.UserID, user.FriendID)
 	if err != nil {
 		zap.L().Error("change read contact failed", zap.Error(err))
+		return errcode.Msg(errcode.ERROR)
+	}
+	if err = redisdao.DelUnreadCount(user.FriendID, user.UserID); err != nil {
+		zap.L().Error("delete unread count failed", zap.Error(err))
+		return errcode.Msg(errcode.ERROR)
+	}
+	if err = redisdao.InitUnreadCount(user.FriendID, user.UserID); err != nil {
+		zap.L().Error("init unread count failed", zap.Error(err))
 		return errcode.Msg(errcode.ERROR)
 	}
 	err = sql.ChangeRead(user.FriendID, user.UserID)
@@ -99,5 +107,6 @@ func ReadMain(user *models.ReadContact) string {
 		zap.L().Error("change read message failed", zap.Error(err))
 		return errcode.Msg(errcode.ERROR)
 	}
+
 	return errcode.Msg(errcode.SUCCESS)
 }

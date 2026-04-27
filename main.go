@@ -71,6 +71,14 @@ func main() {
 		fmt.Printf("init mysql failed,err:%v\n", err)
 		return
 	}
+	if err := mysql.InitMessagesMysql(); err != nil {
+		fmt.Printf("init messages mysql failed,err:%v\n", err)
+		return
+	}
+	if err := mysql.InitDocsMysql(); err != nil {
+		fmt.Printf("init docs mysql failed,err:%v\n", err)
+		return
+	}
 	if err := redis.InitRedis(); err != nil {
 		fmt.Printf("init redis failed,err:%v\n", err)
 		return

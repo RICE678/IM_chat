@@ -13,7 +13,10 @@ func HandleKafkaMessage(topic string, key []byte, value []byte) error {
 		zap.L().Error("unmarshal msg failed", zap.Error(err))
 		return err
 	}
-
-	ws.GlobalManager.Send(msg.ReceiverID, &msg)
+	ok := ws.GlobalManager.Send(msg.ReceiverID, &msg)
+	zap.L().Info("kafka consumed",
+		zap.String("topic", topic),
+		zap.Int64("receiver", msg.ReceiverID),
+		zap.Bool("delivered", ok))
 	return nil
 }

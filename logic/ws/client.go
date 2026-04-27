@@ -40,5 +40,9 @@ func (c *Client) Send(msg *models.WsMsg) {
 		zap.L().Error("unmarshal to map failed", zap.Error(err))
 		return
 	}
-	c.Sock.Emit("message", raw)
+	if emitErr := c.Sock.Emit("message", raw); emitErr != nil {
+		zap.L().Error("sock emit failed", zap.Int64("userID", c.UserID), zap.Error(emitErr))
+		return
+	}
+	zap.L().Info("sock emit ok", zap.Int64("userID", c.UserID), zap.Any("payload", raw))
 }

@@ -15,7 +15,7 @@ func NewContactController() *ContactController { return new(ContactController) }
 // SearchContact godoc
 // @Summary 查看通讯录
 // @Tags Contact
-// @Produce JSON
+// @Produce json
 // @Success 200 {object} models.Contact
 // @Security BearerAuth
 // @Router /contact/list [post]
@@ -41,8 +41,8 @@ func (ContactController) SearchContact(c *gin.Context) {
 // SearchContactMain godoc
 // @Summary 查看朋友详细信息
 // @Tags Contact
-// @Accept JSON
-// @Produce JSON
+// @Accept json
+// @Produce json
 // @Param request body models.FriendMain true "查看请求"
 // @Success 200 {object} models.ContactMain
 // @Security BearerAuth
@@ -81,7 +81,7 @@ func (ContactController) SearchContactMain(c *gin.Context) {
 // ChangeRemark godoc
 // @Summary 修改朋友备注
 // @Tags Contact
-// @Produce JSON
+// @Produce json
 // @Param request body models.FriendRemark true "修改备注请求"
 // @Success 200 {STRING} string
 // @Security BearerAuth

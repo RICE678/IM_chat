@@ -1,6 +1,7 @@
 package ws
 
 import (
+	"IM_chat/dao/sql"
 	"IM_chat/models"
 	"IM_chat/pkg/jwt"
 	"encoding/json"
@@ -30,6 +31,7 @@ func NewSocketIOServer() (*socket.Server, http.Handler) {
 		client := NewClient(claims.UserID, sock)
 		sock.SetData(client)
 		GlobalManager.Register(client)
+		PushUnreadMessages(client)
 
 		sock.On("msg", func(datas ...any) {
 			if len(datas) == 0 {
@@ -67,4 +69,32 @@ func NewSocketIOServer() (*socket.Server, http.Handler) {
 	})
 
 	return io, io.ServeHandler(nil)
+}
+
+func PushUnreadMessages(client *Client) {
+	msgs, err := sql.GetUnreadMessages(client.UserID)
+
+	if err != nil {
+		zap.L().Error("get unread messages failed", zap.Int64("userID", client.UserID), zap.Error(err))
+		return
+	}
+	for _, msg := range msgs {
+		content := msg.Msg
+		if content == "" {
+			content = msg.Context
+		}
+		wsMsg := &models.WsMsg{
+			Type:       "private",
+			Msg:        content,
+			SenderID:   msg.UserID,
+			ReceiverID: msg.ReceiverID,
+			MsgType:    msg.MsgType,
+			Timestamp:  msg.Timestamp,
+		}
+		if wsMsg.MsgType == 2 {
+			wsMsg.FileURL = wsMsg.Msg
+		}
+		client.Send(wsMsg)
+	}
+	zap.L().Info("push unread messages done", zap.Int64("userID", client.UserID), zap.Int("count", len(msgs)))
 }

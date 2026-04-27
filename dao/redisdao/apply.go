@@ -95,20 +95,20 @@ func SetApplyCache(applyID, fromID, toID int64, msg string) error {
 	return nil
 }
 
-// SetApplyPair 建立收件人-发送人到申请ID的映射
-func SetApplyPair(applyID, fromID, toID int64) error {
+// SetApplyPair 建立接收人-发送人到申请ID的映射。
+func SetApplyPair(applyID, senderID, receiverID int64) error {
 	ctx := context.Background()
-	key := fmt.Sprintf(applyPair, toID, fromID)
+	key := fmt.Sprintf(applyPair, receiverID, senderID)
 	if err := redisinit.RDB.Set(ctx, key, applyID, applyInboxTTL).Err(); err != nil {
 		return err
 	}
 	return nil
 }
 
-// GetApplyPair 根据 (toID, fromID) 获取申请ID
-func GetApplyPair(toID, fromID int64) (int64, error) {
+// GetApplyPair 根据 (receiverID, senderID) 获取申请ID。
+func GetApplyPair(receiverID, senderID int64) (int64, error) {
 	ctx := context.Background()
-	key := fmt.Sprintf(applyPair, toID, fromID)
+	key := fmt.Sprintf(applyPair, receiverID, senderID)
 	val, err := redisinit.RDB.Get(ctx, key).Result()
 	if err != nil {
 		if err == redis.Nil {
@@ -123,9 +123,9 @@ func GetApplyPair(toID, fromID int64) (int64, error) {
 	return id, nil
 }
 
-func DelApplyPair(toID, fromID int64) error {
+func DelApplyPair(receiverID, senderID int64) error {
 	ctx := context.Background()
-	key := fmt.Sprintf(applyPair, toID, fromID)
+	key := fmt.Sprintf(applyPair, receiverID, senderID)
 	return redisinit.RDB.Del(ctx, key).Err()
 }
 

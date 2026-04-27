@@ -63,14 +63,14 @@ type ListAppResponse struct {
 	List []Apply `json:"list"`
 }
 type RefuseFriend struct {
-	Account_id    int64  `json:"account_id" binding:"required"`
-	Account_email string `json:"-"`
-	UserID        int64  `json:"-"`
-	AppliID       int64  `json:"-"`
+	SenderID    int64  `json:"account_id" binding:"required"`
+	SenderEmail string `json:"-"`
+	UserID      int64  `json:"-"`
+	ApplyID     int64  `json:"-"`
 }
 
 type AcceptFriend struct {
-	AppliID    int64 `json:"-"`
-	Account_id int64 `json:"account_id" binding:"required"`
-	UserID     int64 `json:"-"`
+	ApplyID  int64 `json:"-"`
+	SenderID int64 `json:"account_id" binding:"required"`
+	UserID   int64 `json:"-"`
 }

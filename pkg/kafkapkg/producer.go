@@ -1,6 +1,7 @@
 package kafka
 
 import (
+	"IM_chat/dao/redisdao"
 	"IM_chat/dao/sql"
 	"IM_chat/models"
 	"IM_chat/pkg/errcode"
@@ -67,6 +68,10 @@ func Publish(topic string, key string, value *models.WsMsg) string {
 	if err != nil {
 		return errcode.Msg(errcode.ERROR)
 	}
+	sendTime := time.Now()
+	if value.Timestamp > 0 {
+		sendTime = time.UnixMilli(value.Timestamp)
+	}
 	msg := &sarama.ProducerMessage{
 		Topic: topic,
 		Key:   sarama.StringEncoder(key),
@@ -76,15 +81,22 @@ func Publish(topic string, key string, value *models.WsMsg) string {
 		ID:         snowflake.Generate(),
 		UserID:     value.SenderID,
 		ReceiverID: value.ReceiverID,
+		Msg:        value.Msg,
 		Context:    value.Msg,
 		MsgType:    value.MsgType,
+		CreateTime: sendTime,
+		Timestamp:  sendTime.UnixMilli(),
 	}
 	if err = sql.SaveMessage(dbMsg); err != nil {
 		zap.L().Error("save msg failed", zap.Error(err))
 		return errcode.Msg(errcode.ERROR)
 	}
+	if err = redisdao.IncrUnreadCount(dbMsg.UserID, dbMsg.ReceiverID); err != nil {
+		zap.L().Error("redis IncrUnreadCount failed", zap.Error(err))
+		return errcode.Msg(errcode.ERROR)
+	}
 	if err = sql.InsertUnRead(value); err != nil {
-		zap.L().Error("insert unread failed", zap.Error(err))
+		zap.L().Error("mysql insert unread failed", zap.Error(err))
 		return errcode.Msg(errcode.ERROR)
 	}
 	select {
